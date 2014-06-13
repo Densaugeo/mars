@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 
 <style type="text/css">
-.canvas
-{
+.canvas {
   position: absolute;
   top:      0px;
   left:     0px;
@@ -15,19 +14,12 @@
   border:   none;
 }
 
-.command_toolbar
-{
-  position:     absolute;
-  top:          0px;
-  left:         0px;
-  z-index:      1;
+#help {
+  position: absolute;
+  top:      10px;
+  left:     10px;
+  z-index:  1;
 }
-
-.command_icons
-{
-  position:     absolute;
-}
-
 </style>
 
 <script type="x-shader/x-vertex" id="vertexShaderSource">
@@ -68,6 +60,37 @@ void main()
 </head>
 
 <body id="body">
+<text id='help'>
+Controls:
+<br />
+W - Fly forward
+<br />
+S - Fly backward
+<br />
+A - Turn left
+<br />
+D - Turn right
+<br />
+Q - Strafe left
+<br />
+E - Strafe right
+<br />
+Z - Ascend
+<br />
+C - Descend
+<br />
+Left arrow - Turn left
+<br />
+Right arrow - Turn right
+<br />
+Up arrow - Turn up
+<br />
+Down arrow - Turn down
+<br />
+F2 - A special shader
+<br />
+F1 - Show/hide these directions
+</text>
 </body>
 
 <script type="text/javascript">
@@ -76,84 +99,36 @@ void main()
 // UI //
 ////////
 
-var keysPressed = new Array();
-var keyDownListeners = new Array();
-document.addEventListener("keydown", function(event) {keysPressed[event.keyCode] = true;});
-document.addEventListener("keyup", function(event) {delete keysPressed[event.keyCode];});
-
-var quickbar = new function()
-{
-  var self = this;
-  
-  var DIV_CLASS = "command_toolbar";
-  var GRAPHIC_SRC = "icon_command_bar.png";
-  var GRAPHIC_TITLE = "This is the command bar, and it holds...commands!";
-  var iconClassname = "command_icons";
-  
-  var icons = new Array();
-  
-  // addCommand(number index, {string src: , string title: , function callback: });
-  var addCommand = function(index, command)
-  {
-    if(typeof command.src      !== "string"  ) throw new TypeError("command.src must be a string");
-    if(typeof command.title    !== "string"  ) throw new TypeError("command.title must be a string");
-    if(typeof command.callback !== "function") throw new TypeError("command.callback must be a function");
-    
-    icons[index].src      = command.src;
-    icons[index].title    = command.title;
-    icons[index].callback = command.callback;
-  }
-  Object.defineProperty(self, "addCommand", {value: addCommand, writeable: false});
-  
-  // Command bar UI elements
-  var div = document.createElement("div");
-  div.className = DIV_CLASS;
-  document.body.appendChild(div);
-  
-  var graphic = document.createElement("img");
-  graphic.src = GRAPHIC_SRC;
-  graphic.title = GRAPHIC_TITLE
-  div.appendChild(graphic);
-  
-  for(var i = 0; i < 10; ++i)
-  {
-    icons[i] = document.createElement("img");
-    icons[i].className = iconClassname;
-    icons[i].style.left = 50*[9,0,1,2,3,4,5,6,7,8][i] + "px";
-    div.appendChild(icons[i]);
-    
-    // Here 'this' is not pointing to the quickbar, it is pointing to the img element from which the event is fired
-    icons[i].addEventListener("click", function(){this.callback();});
+var changeMaterials = function(object) {
+  if(object instanceof THREE.Mesh) {
+    if(object.material === weedShader) {
+      object.material = object.meshMaterial;
+    }
+    else {
+      object.meshMaterial = object.material;
+      object.material = weedShader;
+    }
   }
   
-  var handleKeyDown = function handleKeyDown(event)
-  {
-    for(var i = 0; i < 10; ++i) if(event.keyCode == 48 + i) icons[i].callback();
+  if(object instanceof THREE.Object3D) {
+    for(var i = 0, endi = object.children.length; i < endi; ++i) {
+      changeMaterials(object.children[i]);
+    }
   }
-  document.body.addEventListener("keydown", handleKeyDown);
 }
 
-quickbar.addCommand(1, {src: "icon_weed.png",
-                        title: "Take a trip!",
-                        callback: function()
-                        {
-                          var changeMaterials = function(object)
-                          {
-                            if(object instanceof THREE.Mesh)
-                            {
-                              if(object.material === weedShader) object.material = object.meshMaterial;
-                              else
-                              {
-                                object.meshMaterial = object.material;
-                                object.material = weedShader;
-                              }
-                            }
-                            
-                            if(object instanceof THREE.Object3D) for(var i = object.children.length; i--;) changeMaterials(object.children[i]);
-                          }
-                          
-                          changeMaterials(scene);
-                        }});
+document.addEventListener('keydown', function(e) {
+  switch(e.keyCode) {
+    case 112: // F1 - Toggle help
+      var style = document.getElementById('help').style;
+      console.log(style.visibility);
+      style.visibility = style.visibility === 'hidden' ? 'visible' : 'hidden';
+      break;
+    case 113: // F2 - Toggle shader
+      changeMaterials(scene);
+      break;
+  }
+});
 
 /////////////////
 // THREE setup //
@@ -169,7 +144,7 @@ var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHei
 camera.matrix.compose(new THREE.Vector3(-36.3, 24, 23.7), new THREE.Quaternion(-0.236220, 0.407452, 0.763164, -0.442444), new THREE.Vector3(1, 1, 1));
 scene.add(camera);
 
-var controls = THREE.Densaugeo.FreeControls(camera);
+var controls = new THREE.Densaugeo.FreeControls(camera);
 
 var ambientLight = new THREE.AmbientLight(0x3F3F3F);
 scene.add(ambientLight);
@@ -203,219 +178,25 @@ window.addEventListener("resize", function()
 var meshMaker = new THREE.Densaugeo.MeshMaker();
 meshMaker.addTo = scene;
 meshMaker.forceMatrix = true;
-/*
-loader.load("./graphics/Schroedinger/SchroedingerTile.js", function(geometry, materials)
-{
-  var material = new THREE.MeshFaceMaterial(materials);
-  meshMaker.mesh = new THREE.Mesh(geometry, material);
-  
-  var positions = [
-    [4,   4,  0],
-    [4,   8,  0],
-    [4,   12, 0],
-    [4,   16, 0],
-    [8,   4,  0],
-    [8,   8,  0],
-    [8,   12, 0],
-    [8,   16, 0],
-    [12,  4,  0],
-    [12,  8,  0],
-    [12,  12, 0],
-    [12,  16, 0],
-    [16,  0,  0],
-    [16,  4,  0],
-    [16,  8,  0],
-    [16,  12, 0],
-    [16,  16, 0],
-  
-    [36, -20, 0],
-    [40, -32, 0],
-    [40, -28, 0],
-    [40, -24, 0],
-    [40, -20, 0],
-    [44, -32, 0],
-    [44, -28, 0],
-    [44, -24, 0],
-    [44, -20, 0],
-    [48, -32, 0],
-    [48, -28, 0],
-    [48, -24, 0],
-    [48, -20, 0],
-    [52, -32, 0],
-    [52, -28, 0],
-    [52, -24, 0],
-    [52, -20, 0]
-  ]
-  
-  for(var i = 0, endi = positions.length; i < endi; ++i) {
-    meshMaker.make({position: new THREE.Vector3(positions[i][0], positions[i][1], positions[i][2])});
-  }
-});
-
-loader.load("./graphics/Schroedinger/SchroedingerEdge.js", function(geometry, materials)
-{
-  var material = new THREE.MeshFaceMaterial(materials);
-  meshMaker.mesh = new THREE.Mesh(geometry, material);
-  
-  meshMaker.make({position: new THREE.Vector3(0,   4,  0), euler: new THREE.Euler(0, 0, 1.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(0,   8,  0), euler: new THREE.Euler(0, 0, 1.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(0,   12, 0), euler: new THREE.Euler(0, 0, 1.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(0,   16, 0), euler: new THREE.Euler(0, 0, 1.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(4,   0,  0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(4,   20, 0), euler: new THREE.Euler(0, 0, 1.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(8,   0,  0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(8,   20, 0), euler: new THREE.Euler(0, 0, 1.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(12,  0,  0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(12,  20, 0), euler: new THREE.Euler(0, 0, 1.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(16,  20, 0), euler: new THREE.Euler(0, 0, 1.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(20,  4,  0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(20,  8,  0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(20,  12, 0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(20,  16, 0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-  
-  meshMaker.make({position: new THREE.Vector3(16, -16, 0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(20, -20, 0), euler: new THREE.Euler(0, 0, 1.5*Math.PI, 'XYZ')});
-  
-  meshMaker.make({position: new THREE.Vector3(36, -32, 0), euler: new THREE.Euler(0, 0, 1.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(36, -28, 0), euler: new THREE.Euler(0, 0, 1.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(36, -24, 0), euler: new THREE.Euler(0, 0, 1.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(40, -36, 0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(40, -16, 0), euler: new THREE.Euler(0, 0, 1.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(44, -36, 0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(44, -16, 0), euler: new THREE.Euler(0, 0, 1.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(48, -36, 0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(48, -16, 0), euler: new THREE.Euler(0, 0, 1.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(52, -36, 0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(52, -16, 0), euler: new THREE.Euler(0, 0, 1.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(56, -32, 0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(56, -28, 0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(56, -24, 0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(56, -20, 0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-});
-
-loader.load("./graphics/Schroedinger/SchroedingerCorner.js", function(geometry, materials)
-{
-  var material = new THREE.MeshFaceMaterial(materials);
-  meshMaker.mesh = new THREE.Mesh(geometry, material);
-  
-  meshMaker.make({position: new THREE.Vector3(0,   0,  0), euler: new THREE.Euler(0, 0, 1.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(0,   20, 0), euler: new THREE.Euler(0, 0, 1.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(20,  0,  0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(20,  20, 0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-  
-  meshMaker.make({position: new THREE.Vector3(0,  -36, 0), euler: new THREE.Euler(0, 0, 1.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(0,  -16, 0), euler: new THREE.Euler(0, 0, 1.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(20, -36, 0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(20, -16, 0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-  
-  meshMaker.make({position: new THREE.Vector3(36, -36, 0), euler: new THREE.Euler(0, 0, 1.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(36, -16, 0), euler: new THREE.Euler(0, 0, 1.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(56, -36, 0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(56, -16, 0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-});
-
-loader.load("./graphics/Schroedinger/SchroedingerBridge.js", function(geometry, materials)
-{
-  var material = new THREE.MeshFaceMaterial(materials);
-  meshMaker.mesh = new THREE.Mesh(geometry, material);
-  
-  meshMaker.make({position: new THREE.Vector3(16, -4,  0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(16, -8,  0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(16, -12, 0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(4,  -16, 0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(8,  -16, 0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(12, -16, 0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(0,  -20, 0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(0,  -24, 0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(20, -24, 0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(0,  -28, 0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(20, -28, 0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(0,  -32, 0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(20, -32, 0), euler: new THREE.Euler(0, 0, 0.5*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(4,  -36, 0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(8,  -36, 0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(12, -36, 0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(16, -36, 0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(24, -20, 0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(28, -20, 0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(32, -20, 0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-});
-
-loader.load("graphics/Schroedinger/SchroedingerEnd.js", function(geometry, materials)
-{
-  var material = new THREE.MeshFaceMaterial(materials);
-  meshMaker.mesh = new THREE.Mesh(geometry, material);
-  
-  meshMaker.make({position: new THREE.Vector3(44,  20, 0), euler: new THREE.Euler(0, 0, 1.0*Math.PI, 'XYZ')});
-  meshMaker.make({position: new THREE.Vector3(48,  20, 0), euler: new THREE.Euler(0, 0, 0.0*Math.PI, 'XYZ')});
-});
-
-loader.load("graphics/Schroedinger/SchroedingerIsland.js", function(geometry, materials)
-{
-  var material = new THREE.MeshFaceMaterial(materials);
-  meshMaker.mesh = new THREE.Mesh(geometry, material);
-  
-  meshMaker.make({position: new THREE.Vector3(8,  -28, 0)});
-  meshMaker.make({position: new THREE.Vector3(32,  8,  0)});
-  meshMaker.make({position: new THREE.Vector3(52,  4,  0)});
-});
-
-var airship = new THREE.Object3D();
-airship.position = new THREE.Vector3(10, 10, 10);
-scene.add(airship);
-*/
-var models = [/*"./graphics/Schroedinger/SchroedingerTower.js",
-              "./graphics/Schroedinger/SchroedingerBarracks.js",
-              "./graphics/Schroedinger/airship_body.js",
-              "./graphics/Schroedinger/airship_propeller.js",*/
-              "Blender/mars_terrain.js",
-              "Blender/mars_shed.js",
-              "Blender/mars_solar.js",
-              "Blender/mars_base.js"
-             ];
+var models = ["mars_terrain.js",
+              "mars_shed.js",
+              "mars_solar.js",
+              "mars_base.js"];
 
 loader.loadAll(models, function(geometries, materialses) {
   var geometry, material;
-  /*
-  geometry = geometries["./graphics/Schroedinger/SchroedingerTower.js"];
-  material = new THREE.MeshFaceMaterial(materialses["./graphics/Schroedinger/SchroedingerTower.js"]);
   
-  meshMaker.mesh = new THREE.Mesh(geometry, material);
-  meshMaker.make({position: new THREE.Vector3(10,  10, 0)});
-  
-  geometry = geometries["./graphics/Schroedinger/SchroedingerBarracks.js"];
-  material = new THREE.MeshFaceMaterial(materialses["./graphics/Schroedinger/SchroedingerBarracks.js"]);
-  
-  meshMaker.mesh = new THREE.Mesh(geometry, material);
-  barracks = meshMaker.make({position: new THREE.Vector3(50, -20, 0), euler: new THREE.Euler(0, 0, 1.5*Math.PI, 'XYZ')});
-  
-  meshMaker.addTo = airship;
-  
-  geometry = geometries["./graphics/Schroedinger/airship_body.js"];
-  material = new THREE.MeshFaceMaterial(materialses["./graphics/Schroedinger/airship_body.js"]);
-  
-  meshMaker.mesh = new THREE.Mesh(geometry, material);
-  airship.body = meshMaker.make({position: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(0.1, 0.1, 0.1)});
-  
-  geometry = geometries["./graphics/Schroedinger/airship_propeller.js"];
-  material = new THREE.MeshFaceMaterial(materialses["./graphics/Schroedinger/airship_propeller.js"]);
-  
-  meshMaker.mesh = new THREE.Mesh(geometry, material);
-  airship.propeller = meshMaker.make({position: new THREE.Vector3(0, -1.4, 0), scale: new THREE.Vector3(0.1, 0.1, 0.1)});
-  
-  meshMaker.addTo = scene;
-  */
-  geometry = geometries["Blender/mars_terrain.js"];
-  material = new THREE.MeshFaceMaterial(materialses["Blender/mars_terrain.js"]);
+  geometry = geometries["mars_terrain.js"];
+  material = new THREE.MeshFaceMaterial(materialses["mars_terrain.js"]);
   material.materials[0].side = THREE.DoubleSide;
   
   meshMaker.mesh = new THREE.Mesh(geometry, material);
   meshMaker.make({position: new THREE.Vector3(0, 0, 0)});
   
-  geometry = geometries["Blender/mars_solar.js"];
-  material = new THREE.MeshFaceMaterial(materialses["Blender/mars_solar.js"]);
-  for(var i = 0, endi = materialses["Blender/mars_solar.js"].length; i < endi; ++i) {
-    materialses["Blender/mars_solar.js"][i].shading = THREE.FlatShading;
+  geometry = geometries["mars_solar.js"];
+  material = new THREE.MeshFaceMaterial(materialses["mars_solar.js"]);
+  for(var i = 0, endi = materialses["mars_solar.js"].length; i < endi; ++i) {
+    materialses["mars_solar.js"][i].shading = THREE.FlatShading;
   }
   
   meshMaker.mesh = new THREE.Mesh(geometry, material);
@@ -430,31 +211,24 @@ loader.loadAll(models, function(geometries, materialses) {
     meshMaker.make({position: new THREE.Vector3(28, i, 0)});
   }
   
-  geometry = geometries["Blender/mars_shed.js"];
-  material = new THREE.MeshFaceMaterial(materialses["Blender/mars_shed.js"]);
-  for(var i = 0, endi = materialses["Blender/mars_shed.js"].length; i < endi; ++i) {
-    materialses["Blender/mars_shed.js"][i].shading = THREE.FlatShading;
+  geometry = geometries["mars_shed.js"];
+  material = new THREE.MeshFaceMaterial(materialses["mars_shed.js"]);
+  for(var i = 0, endi = materialses["mars_shed.js"].length; i < endi; ++i) {
+    materialses["mars_shed.js"][i].shading = THREE.FlatShading;
   }
   
   meshMaker.mesh = new THREE.Mesh(geometry, material);
   meshMaker.make({position: new THREE.Vector3(-5, -10, 0)});
   meshMaker.make({position: new THREE.Vector3(5, 20, 0)});
   
-  geometry = geometries["Blender/mars_base.js"];
-  material = new THREE.MeshFaceMaterial(materialses["Blender/mars_base.js"]);
-  for(var i = 0, endi = materialses["Blender/mars_base.js"].length; i < endi; ++i) {
-    materialses["Blender/mars_base.js"][i].shading = THREE.FlatShading;
+  geometry = geometries["mars_base.js"];
+  material = new THREE.MeshFaceMaterial(materialses["mars_base.js"]);
+  for(var i = 0, endi = materialses["mars_base.js"].length; i < endi; ++i) {
+    materialses["mars_base.js"][i].shading = THREE.FlatShading;
   }
   
   meshMaker.mesh = new THREE.Mesh(geometry, material);
   meshMaker.make({position: new THREE.Vector3(0, 0, 0)});
-  
-  /*
-  geometry = geometries["./graphics/Schroedinger/grass.js"];
-  material = new THREE.MeshFaceMaterial(materialses["./graphics/Schroedinger/grass.js"]);
-  
-  meshMaker.mesh = new THREE.Mesh(geometry, material);
-  meshMaker.make({position: new THREE.Vector3(0, 0, -20)});*/
 });
 
 /////////////////////////
@@ -467,15 +241,6 @@ function tick()
 {
   // note: three.js includes requestAnimationFrame shim
   requestAnimationFrame(tick);
-  
-  timeDelta = new Date().getTime() - timePrevious;
-  timePrevious = new Date().getTime();
-  
-  for(var i in keysPressed) if(keyDownListeners[i]) keyDownListeners[i]();
-  
-  camera.matrixWorldNeedsUpdate = true;
-  
-  //airship.propeller.rotation.y += timeDelta/1000;
   
   renderer.render(scene, camera);
 }

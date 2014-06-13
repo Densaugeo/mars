@@ -1,7 +1,7 @@
 process.title = 'Airship';
 
 var http    = require('http');
-var repl    = require('repl');
+//var repl    = require('repl');
 var fs      = require('fs');
 var express = require('express');
 var ws      = require('ws');
@@ -86,7 +86,7 @@ wsServer.on('connection', function(connection) {
 // CLI //
 /////////
 
-var cli = repl.start({});
+/*var cli = repl.start({});
 cli.context.http           = http;
 cli.context.repl           = repl;
 cli.context.fs             = fs;
@@ -101,3 +101,4 @@ cli.context.options        = options;
 cli.context.app            = app;
 cli.context.httpServer     = httpServer;
 cli.context.wsServer       = wsServer;
+*/

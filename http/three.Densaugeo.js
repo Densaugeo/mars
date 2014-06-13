@@ -208,26 +208,26 @@ THREE.Densaugeo.FreeControls = function(camera, domElement, options) {
     90: function(time) {camera.matrix.elements[14] += time*self.panKeySpeed}, // Z - Strafe camera down (in global coords)
     67: function(time) {camera.matrix.elements[14] -= time*self.panKeySpeed}, // C - Strafe camera up (in global coords)
     
-    38: function(time) {camera.matrix.multiply(new THREE.Matrix4().makeRotationX( self.rotationKeySpeed*timeDelta))}, // Up arrow - Turn camera up
-    40: function(time) {camera.matrix.multiply(new THREE.Matrix4().makeRotationX(-self.rotationKeySpeed*timeDelta))}, // Down arrow - Turn camera down
+    38: function(time) {camera.matrix.multiply(new THREE.Matrix4().makeRotationX( self.rotationKeySpeed*time))}, // Up arrow - Turn camera up
+    40: function(time) {camera.matrix.multiply(new THREE.Matrix4().makeRotationX(-self.rotationKeySpeed*time))}, // Down arrow - Turn camera down
     65: function(time) {
       var position = THREE.Vector3.prototype.setFromMatrixPosition(camera.matrix);
-      camera.matrix.multiplyMatrices(new THREE.Matrix4().makeRotationZ( self.rotationKeySpeed*timeDelta), camera.matrix);
+      camera.matrix.multiplyMatrices(new THREE.Matrix4().makeRotationZ( self.rotationKeySpeed*time), camera.matrix);
       camera.matrix.setPosition(position);
     }, // A - Turn camera left
     37: function(time) {
       var position = THREE.Vector3.prototype.setFromMatrixPosition(camera.matrix);
-      camera.matrix.multiplyMatrices(new THREE.Matrix4().makeRotationZ( self.rotationKeySpeed*timeDelta), camera.matrix);
+      camera.matrix.multiplyMatrices(new THREE.Matrix4().makeRotationZ( self.rotationKeySpeed*time), camera.matrix);
       camera.matrix.setPosition(position);
     }, // Left arrow - Turn camera left
     68: function(time) {
       var position = THREE.Vector3.prototype.setFromMatrixPosition(camera.matrix);
-      camera.matrix.multiplyMatrices(new THREE.Matrix4().makeRotationZ(-self.rotationKeySpeed*timeDelta), camera.matrix);
+      camera.matrix.multiplyMatrices(new THREE.Matrix4().makeRotationZ(-self.rotationKeySpeed*time), camera.matrix);
       camera.matrix.setPosition(position);
     }, // D - Trun camera right
     39: function(time) {
       var position = THREE.Vector3.prototype.setFromMatrixPosition(camera.matrix);
-      camera.matrix.multiplyMatrices(new THREE.Matrix4().makeRotationZ(-self.rotationKeySpeed*timeDelta), camera.matrix);
+      camera.matrix.multiplyMatrices(new THREE.Matrix4().makeRotationZ(-self.rotationKeySpeed*time), camera.matrix);
       camera.matrix.setPosition(position);
     } // Right arrow - Turn camera right
   }
@@ -243,6 +243,8 @@ THREE.Densaugeo.FreeControls = function(camera, domElement, options) {
       keydownHandlers[i] && keydownHandlers[i](time);
     }
     
+    camera.matrixWorldNeedsUpdate = true;
+    
     requestAnimationFrame(camLoop);
   }
   camLoop();
@@ -256,13 +258,13 @@ THREE.Densaugeo.FreeControls = function(camera, domElement, options) {
  * var freeCamSpeed = 0.01;
  * var freeCamRotation = 0.001;
  * 
- * keyDownListeners[38] = function() {camera.matrix.multiply(new THREE.Matrix4().makeRotationX( freeCamRotation*timeDelta))} // Up arrow - Turn camera up
- * keyDownListeners[40] = function() {camera.matrix.multiply(new THREE.Matrix4().makeRotationX(-freeCamRotation*timeDelta))} // Down arrow - Turn camera down
+ * keyDownListeners[38] = function() {camera.matrix.multiply(new THREE.Matrix4().makeRotationX( freeCamRotation*time))} // Up arrow - Turn camera up
+ * keyDownListeners[40] = function() {camera.matrix.multiply(new THREE.Matrix4().makeRotationX(-freeCamRotation*time))} // Down arrow - Turn camera down
  * keyDownListeners[37] = function()
  * {
  *  var position = THREE.Vector3.prototype.setFromMatrixPosition(camera.matrix);
  *  
- *  camera.matrix.multiplyMatrices(new THREE.Matrix4().makeRotationZ(freeCamRotation*timeDelta), camera.matrix);
+ *  camera.matrix.multiplyMatrices(new THREE.Matrix4().makeRotationZ(freeCamRotation*time), camera.matrix);
  *  
  *  camera.matrix.setPosition(position);
  * }
@@ -270,7 +272,7 @@ THREE.Densaugeo.FreeControls = function(camera, domElement, options) {
  * {
  *  var position = THREE.Vector3.prototype.setFromMatrixPosition(camera.matrix);
  *  
- *  camera.matrix.multiplyMatrices(new THREE.Matrix4().makeRotationZ(-freeCamRotation*timeDelta), camera.matrix);
+ *  camera.matrix.multiplyMatrices(new THREE.Matrix4().makeRotationZ(-freeCamRotation*time), camera.matrix);
  *  
  *  camera.matrix.setPosition(position);
  * }*/
