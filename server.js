@@ -1,159 +1,103 @@
-#!/bin/env node
-//  OpenShift sample Node application
-var express = require('express');
+process.title = 'Airship';
+
+var http    = require('http');
+var repl    = require('repl');
 var fs      = require('fs');
+var express = require('express');
+var ws      = require('ws');
+var stdio   = require('stdio');
+var iz      = require('iz');
 
+/////////////////
+// Get options //
+/////////////////
 
-/**
- *  Define the sample application.
- */
-var SampleApp = function() {
+var optionsCLI = stdio.getopt({
+  'ip'    : {key: 'i', args: 1, description: 'IP address for both HTTP and WS servers. Defaults to OpenShift if available, or if not then 0.0.0.0'},
+  'port'  : {key: 'p', args: 1, description: 'TCP port for both HTTP and WS servers. Defaults to OpenShift if available, or if not then 8080'},
+  'config': {key: 'c', args: 1, description: 'Load settings from configurations file. Defaults to ./config.json'},
+  'nofile': {          args: 0, description: 'Run without a config file. "ip" and "port" options must be specified'}
+});
 
-    //  Scope.
-    var self = this;
+try {
+  var optionsFile = JSON.parse(fs.readFileSync(optionsCLI.config || 'config.json'));
+}
+catch(error) {
+  console.error('Warning: Unable to read config file "' + (optionsCLI.config || 'config.json') + '". (' + error + '). Options not specified by argument will fall back to hard-coded defaults');
+  var optionsFile = {}
+}
 
+var optionsDefault = {
+  ip    : '0.0.0.0',
+  port  : 8080,
+  config: null,
+  nofile: true
+};
 
-    /*  ================================================================  */
-    /*  Helper functions.                                                 */
-    /*  ================================================================  */
+// Condense options sources into one options object, applying priority
+var options = {};
 
-    /**
-     *  Set up server IP address and port # using env variables/defaults.
-     */
-    self.setupVariables = function() {
-        //  Set the environment variables we need.
-        self.ipaddress = process.env.OPENSHIFT_NODEJS_IP;
-        self.port      = process.env.OPENSHIFT_NODEJS_PORT || 8080;
+for(var i in optionsDefault) {
+  options[i] = optionsCLI[i] || optionsFile[i] || optionsDefault[i];
+}
 
-        if (typeof self.ipaddress === "undefined") {
-            //  Log errors on OpenShift but continue w/ 127.0.0.1 - this
-            //  allows us to run/test the app locally.
-            console.warn('No OPENSHIFT_NODEJS_IP var, using 127.0.0.1');
-            self.ipaddress = "127.0.0.1";
-        };
-    };
+if(!iz(options.ip).ip().valid) {
+  console.error('Error: IP must be a valid IP address or local url');
+  process.exit(1);
+}
 
+if(!iz(options.port).int().between(1, 65535).valid) {
+  console.error('Error: TCP port must be an integer between 1 and 65535');
+  process.exit(1);
+}
 
-    /**
-     *  Populate the cache.
-     */
-    self.populateCache = function() {
-        if (typeof self.zcache === "undefined") {
-            self.zcache = { 'index.html': '' };
-        }
+if(iz(options.port).int().between(1, 1024).valid) {
+  console.warn('Warning: TCP ports between 1 and 1024 may require root permission');
+}
 
-        //  Local cache for static content.
-        self.zcache['index.html'] = fs.readFileSync('./index.html');
-    };
+/////////////////
+// HTTP server //
+/////////////////
 
+var app = express();
+var httpServer = http.createServer(app);
+httpServer.listen(options.port, options.ip);
 
-    /**
-     *  Retrieve entry (content) from cache.
-     *  @param {string} key  Key identifying content to retrieve from cache.
-     */
-    self.cache_get = function(key) { return self.zcache[key]; };
+// Simple static page server
+app.use('/http', express.static('./http'));
+app.use(express.compress());
+console.log(new Date().toUTCString() + ': Static file server listening at http://' + options.ip + ':' + options.port + '/http');
 
+///////////////
+// WS server //
+///////////////
 
-    /**
-     *  terminator === the termination handler
-     *  Terminate server on receipt of the specified signal.
-     *  @param {string} sig  Signal to terminate on.
-     */
-    self.terminator = function(sig){
-        if (typeof sig === "string") {
-           console.log('%s: Received %s - terminating sample app ...',
-                       Date(Date.now()), sig);
-           process.exit(1);
-        }
-        console.log('%s: Node server stopped.', Date(Date.now()) );
-    };
+var wsServer = new ws.Server({server: httpServer, path: '/ws'});
 
+wsServer.on('connection', function(connection) {
+  console.log(new Date().toUTCString() + ': Received WebSocket');
+  
+  connection.on('close', function() {
+    console.log(new Date().toUTCString() + ': Closed WebSocket');
+  });
+});
 
-    /**
-     *  Setup termination handlers (for exit and a list of signals).
-     */
-    self.setupTerminationHandlers = function(){
-        //  Process on exit and signals.
-        process.on('exit', function() { self.terminator(); });
+/////////
+// CLI //
+/////////
 
-        // Removed 'SIGPIPE' from the list - bugz 852598.
-        ['SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGILL', 'SIGTRAP', 'SIGABRT',
-         'SIGBUS', 'SIGFPE', 'SIGUSR1', 'SIGSEGV', 'SIGUSR2', 'SIGTERM'
-        ].forEach(function(element, index, array) {
-            process.on(element, function() { self.terminator(element); });
-        });
-    };
-
-
-    /*  ================================================================  */
-    /*  App server functions (main app logic here).                       */
-    /*  ================================================================  */
-
-    /**
-     *  Create the routing table entries + handlers for the application.
-     */
-    self.createRoutes = function() {
-        self.routes = { };
-
-        self.routes['/asciimo'] = function(req, res) {
-            var link = "http://i.imgur.com/kmbjB.png";
-            res.send("<html><body><img src='" + link + "'></body></html>");
-        };
-
-        self.routes['/'] = function(req, res) {
-            res.setHeader('Content-Type', 'text/html');
-            res.send(self.cache_get('index.html') );
-        };
-    };
-
-
-    /**
-     *  Initialize the server (express) and create the routes and register
-     *  the handlers.
-     */
-    self.initializeServer = function() {
-        self.createRoutes();
-        self.app = express.createServer();
-
-        //  Add handlers for the app (from the routes).
-        for (var r in self.routes) {
-            self.app.get(r, self.routes[r]);
-        }
-    };
-
-
-    /**
-     *  Initializes the sample application.
-     */
-    self.initialize = function() {
-        self.setupVariables();
-        self.populateCache();
-        self.setupTerminationHandlers();
-
-        // Create the express server and routes.
-        self.initializeServer();
-    };
-
-
-    /**
-     *  Start the server (starts up the sample application).
-     */
-    self.start = function() {
-        //  Start the app on the specific interface (and port).
-        self.app.listen(self.port, self.ipaddress, function() {
-            console.log('%s: Node server started on %s:%d ...',
-                        Date(Date.now() ), self.ipaddress, self.port);
-        });
-    };
-
-};   /*  Sample Application.  */
-
-
-
-/**
- *  main():  Main code.
- */
-var zapp = new SampleApp();
-zapp.initialize();
-zapp.start();
-
+var cli = repl.start({});
+cli.context.http           = http;
+cli.context.repl           = repl;
+cli.context.fs             = fs;
+cli.context.express        = express;
+cli.context.ws             = ws;
+cli.context.stdio          = stdio;
+cli.context.iz             = iz;
+cli.context.optionsCLI     = optionsCLI;
+cli.context.optionsFile    = optionsFile;
+cli.context.optionsDefault = optionsDefault;
+cli.context.options        = options;
+cli.context.app            = app;
+cli.context.httpServer     = httpServer;
+cli.context.wsServer       = wsServer;
