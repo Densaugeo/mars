@@ -55,6 +55,14 @@ if(iz(options.port).int().between(1, 1024).valid) {
   console.warn('Warning: TCP ports between 1 and 1024 may require root permission');
 }
 
+// Openshift uses different stuff
+if(process.env.OPENSHIFT_NODEJS_IP) {
+  options.ip = process.env.OPENSHIFT_NODEJS_IP;
+}
+if(process.env.OPENSHIFT_NODEJS_PORT) {
+  options.port = process.env.OPENSHIFT_NODEJS_PORT;
+}
+
 /////////////////
 // HTTP server //
 /////////////////
