@@ -72,7 +72,7 @@ var httpServer = http.createServer(app);
 httpServer.listen(options.port, options.ip);
 
 // Simple static page server
-app.use('/http', express.static('./http'));
+app.use('/', express.static('./http'));
 app.use(express.compress());
 console.log(new Date().toUTCString() + ': Static file server listening at http://' + options.ip + ':' + options.port + '/http');
 
@@ -80,7 +80,7 @@ console.log(new Date().toUTCString() + ': Static file server listening at http:/
 // WS server //
 ///////////////
 
-var wsServer = new ws.Server({server: httpServer, path: '/ws'});
+/*var wsServer = new ws.Server({server: httpServer, path: '/ws'});
 
 wsServer.on('connection', function(connection) {
   console.log(new Date().toUTCString() + ': Received WebSocket');
@@ -89,7 +89,7 @@ wsServer.on('connection', function(connection) {
     console.log(new Date().toUTCString() + ': Closed WebSocket');
   });
 });
-
+*/
 /////////
 // CLI //
 /////////
