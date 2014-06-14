@@ -1,6 +1,6 @@
 {
-  "ip"    : "0.0.0.0",
-  "port"  : 8080,
+  "ip"    : "OPENSHIFT_NODEJS_IP",
+  "port"  : "OPENSHIFT_NODEJS_PORT",
   "config": "config.json",
   "nofile": false
 }

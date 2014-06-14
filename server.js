@@ -42,25 +42,27 @@ for(var i in optionsDefault) {
 }
 
 if(!iz(options.ip).ip().valid) {
-  console.error('Error: IP must be a valid IP address or local url');
-  process.exit(1);
+  if(iz(process.env[options.ip]).required().ip().valid) {
+    options.ip = process.env[options.ip];
+  }
+  else {
+    console.error('Error: IP must be a valid IP address or local url');
+    process.exit(1);
+  }
 }
 
 if(!iz(options.port).int().between(1, 65535).valid) {
-  console.error('Error: TCP port must be an integer between 1 and 65535');
-  process.exit(1);
+  if(iz(process.env[options.port]).required().int().between(1, 65535).valid) {
+    options.port = process.env[options.port];
+  }
+  else {
+    console.error('Error: TCP port must be an integer between 1 and 65535');
+    process.exit(1);
+  }
 }
 
 if(iz(options.port).int().between(1, 1024).valid) {
   console.warn('Warning: TCP ports between 1 and 1024 may require root permission');
-}
-
-// Openshift uses different stuff
-if(process.env.OPENSHIFT_NODEJS_IP) {
-  options.ip = process.env.OPENSHIFT_NODEJS_IP;
-}
-if(process.env.OPENSHIFT_NODEJS_PORT) {
-  options.port = process.env.OPENSHIFT_NODEJS_PORT;
 }
 
 /////////////////
