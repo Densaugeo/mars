@@ -1,7 +1,7 @@
 process.title = 'Airship';
 
 var http    = require('http');
-//var repl    = require('repl');
+var repl    = require('repl');
 var fs      = require('fs');
 var express = require('express');
 var ws      = require('ws');
@@ -96,19 +96,20 @@ wsServer.on('connection', function(connection) {
 // CLI //
 /////////
 
-/*var cli = repl.start({});
-cli.context.http           = http;
-cli.context.repl           = repl;
-cli.context.fs             = fs;
-cli.context.express        = express;
-cli.context.ws             = ws;
-cli.context.stdio          = stdio;
-cli.context.iz             = iz;
-cli.context.optionsCLI     = optionsCLI;
-cli.context.optionsFile    = optionsFile;
-cli.context.optionsDefault = optionsDefault;
-cli.context.options        = options;
-cli.context.app            = app;
-cli.context.httpServer     = httpServer;
-cli.context.wsServer       = wsServer;
-*/
+if(repl != null) { // REPL may not be available on some cloud hosts
+  var cli = repl.start({});
+  cli.context.http           = http;
+  cli.context.repl           = repl;
+  cli.context.fs             = fs;
+  cli.context.express        = express;
+  cli.context.ws             = ws;
+  cli.context.stdio          = stdio;
+  cli.context.iz             = iz;
+  cli.context.optionsCLI     = optionsCLI;
+  cli.context.optionsFile    = optionsFile;
+  cli.context.optionsDefault = optionsDefault;
+  cli.context.options        = options;
+  cli.context.app            = app;
+  cli.context.httpServer     = httpServer;
+  cli.context.wsServer       = wsServer;
+}
