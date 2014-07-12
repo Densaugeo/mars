@@ -1,7 +1,19 @@
 <!DOCTYPE html>
+<html lang="en">
 <head>
+<meta charset="utf-8">
+
 <title>Fly around a Mars base</title>
-<meta charset="UTF-8">
+
+<script type="text/javascript">
+// Frame buster
+if(top !== self) {
+  top.location.replace(self.location.href);
+}
+</script>
+
+<script type="text/javascript" src="three.min.js"></script>
+<script type="text/javascript" src="three.Densaugeo.js"></script>
 
 <style type="text/css">
 .canvas {
@@ -55,8 +67,6 @@ void main()
 }
 </script>
 
-<script type="text/javascript" src="three.min.js"></script>
-<script type="text/javascript" src="three.Densaugeo.js"></script>
 </head>
 
 <body id="body">
@@ -247,6 +257,9 @@ function tick()
 
 tick();
 
-</script>
+// Startup scripts //
 
+eval(localStorage.onstart);
+
+</script>
 </html>
