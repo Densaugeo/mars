@@ -4,7 +4,7 @@ var http    = require('http');
 var repl    = require('repl');
 var fs      = require('fs');
 var express = require('express');
-var ws      = require('ws');
+//var ws      = require('ws');
 var stdio   = require('stdio');
 var iz      = require('iz');
 
@@ -92,7 +92,7 @@ if(repl != null) { // REPL may not be available on some cloud hosts
   cli.context.repl           = repl;
   cli.context.fs             = fs;
   cli.context.express        = express;
-  cli.context.ws             = ws;
+  //cli.context.ws             = ws;
   cli.context.stdio          = stdio;
   cli.context.iz             = iz;
   cli.context.optionsCLI     = optionsCLI;
@@ -101,5 +101,5 @@ if(repl != null) { // REPL may not be available on some cloud hosts
   cli.context.options        = options;
   cli.context.app            = app;
   cli.context.httpServer     = httpServer;
-  cli.context.wsServer       = wsServer;
+  //cli.context.wsServer       = wsServer;
 }
