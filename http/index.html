@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+
+<title>A Mad Workshop!</title>
+
+<script type="text/javascript">
+// Frame buster
+if(top !== self) {
+  top.location.replace(self.location.href);
+}
+</script>
+
+<style type='text/css'>
+body {
+  background-color: #000;
+  color: #0F0;
+  font-size: 12pt;
+}
+#mars {
+  position: absolute;
+  left: 35%;
+  top: 5%;
+  max-width: 20%;
+  padding: 2mm;
+  border: 1px solid #FF0;
+  border-radius: 2mm;
+}
+#mars:hover {
+  border-color: #0F0;
+}
+</style>
+</head>
+
+<body>
+
+<div id="mars">
+<a href="mars.html" target="_blank">
+<img src="mars_screen.png" width="100%"></img>
+</a>
+<text id="mars_text">WebGL view of <a href="http://www.thingiverse.com/thing:362133" target="_blank">my model</a> for the <a href="http://www.thingiverse.com/tag:MakerBotMars" target="_blank">MakerBotMars competition</a></text>
+</div>
+
+</body>
+
+<script type="text/javascript">
+
+var isDescendantOf = function(descendant, ancestor) {
+  if(descendant.parentNode === ancestor) {
+    return true;
+  }
+  if(descendant.parentNode == null) {
+    return false;
+  }
+  return isDescendantOf(descendant.parentNode, ancestor);
+}
+
+var mars = document.getElementById('mars');
+var mars_text = document.getElementById('mars_text');
+mars.removeChild(mars_text);
+
+mars.addEventListener('mouseover', function(e) {
+  mars.appendChild(mars_text);
+});
+
+mars.addEventListener('mouseout', function(e) {
+  if(e.relatedTarget !== mars && !isDescendantOf(e.relatedTarget, mars)) {
+    mars.removeChild(mars_text);
+  }
+});
+
+/////////////////////
+// Startup scripts //
+/////////////////////
+
+eval(localStorage.onstart);
+
+</script>
+</html>
