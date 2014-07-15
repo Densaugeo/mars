@@ -30,6 +30,22 @@ body {
 #mars:hover {
   border-color: #0F0;
 }
+#note {
+  position: absolute;
+  left: 65%;
+  top: 5%;
+  max-width: 30%;
+  padding: 2mm;
+  border: 1px solid #0FF;
+  border-radius: 2mm;
+}
+#note_name {
+  text-align: right;
+  color: #0FF;
+}
+#note_date {
+  color: #888;
+}
 </style>
 </head>
 
@@ -40,7 +56,17 @@ body {
 <a href="mars.html" target="_blank">
 <img src="mars_screen.png" width="100%"></img>
 </a>
-<text id="mars_text">WebGL view of <a href="http://www.thingiverse.com/thing:362133" target="_blank">my model</a> for the <a href="http://www.thingiverse.com/tag:MakerBotMars" target="_blank">MakerBotMars competition</a></text>
+<div id="mars_text">WebGL view of <a href="http://www.thingiverse.com/thing:362133" target="_blank">my model</a> for the <a href="http://www.thingiverse.com/tag:MakerBotMars" target="_blank">MakerBotMars competition</a></div>
+</div>
+
+<div id="note">
+<div id="note_date">15 July 2014</div>
+<br />
+<div id="note_text">Hello, this Mars Base model is the first entry for the Mad Engineer's Workshop.
+It's written with WebGL (and the three.js library), and is also my first attempt at making a 3D printing model.
+Nothing will actually be printed until I get a 3D printer though...</div>
+<br />
+<div id="note_name">- Lunariel</div>
 </div>
 
 </body>
