@@ -23,7 +23,9 @@ if(top !== self) {
   z-index:  0;
   width:    100%;
   height:   100%;
+  padding:  0;
   border:   none;
+  margin:   0;
 }
 
 #help {
@@ -77,15 +79,11 @@ W - Fly forward
 <br />
 S - Fly backward
 <br />
-A - Turn left
+A - Strafe left
 <br />
-D - Turn right
+D - Strafe right
 <br />
-Q - Strafe left
-<br />
-E - Strafe right
-<br />
-Z - Ascend
+E - Ascend
 <br />
 C - Descend
 <br />
@@ -96,6 +94,10 @@ Right arrow - Turn right
 Up arrow - Turn up
 <br />
 Down arrow - Turn down
+<br />
+Left click - Mouse lock
+<br />
+Right click and drag - Pan
 <br />
 F2 - A special shader
 <br />
@@ -169,8 +171,6 @@ var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHei
 camera.matrix.compose(new THREE.Vector3(-36.3, 24, 23.7), new THREE.Quaternion(-0.236220, 0.407452, 0.763164, -0.442444), new THREE.Vector3(1, 1, 1));
 scene.add(camera);
 
-var controls = new THREE.Densaugeo.FreeControls(camera);
-
 var ambientLight = new THREE.AmbientLight(0x3F3F3F);
 scene.add(ambientLight);
 
@@ -186,6 +186,8 @@ renderer.setClearColor(0xC0C0C0, 1);
 
 document.body.appendChild(renderer.domElement);
 renderer.domElement.className += " canvas";
+
+var controls = new THREE.Densaugeo.FreeControls(camera, renderer.domElement);
 
 // WebGL occupies entire browser window
 window.addEventListener("resize", function()
