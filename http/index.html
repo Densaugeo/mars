@@ -87,28 +87,16 @@ clicky_site_ids.push(100755588);
 
 <script type="text/javascript">
 
-var isDescendantOf = function(descendant, ancestor) {
-  if(descendant.parentNode === ancestor) {
-    return true;
-  }
-  if(descendant.parentNode == null) {
-    return false;
-  }
-  return isDescendantOf(descendant.parentNode, ancestor);
-}
-
 var mars = document.getElementById('mars');
 var mars_text = document.getElementById('mars_text');
 mars.removeChild(mars_text);
 
-mars.addEventListener('mouseover', function(e) {
+mars.addEventListener('mouseenter', function(e) {
   mars.appendChild(mars_text);
 });
 
-mars.addEventListener('mouseout', function(e) {
-  if(e.relatedTarget !== mars && !isDescendantOf(e.relatedTarget, mars)) {
-    mars.removeChild(mars_text);
-  }
+mars.addEventListener('mouseleave', function(e) {
+  mars.removeChild(mars_text);
 });
 
 /////////////////////
