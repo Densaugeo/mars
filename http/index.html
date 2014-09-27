@@ -18,17 +18,23 @@ body {
   color: #0F0;
   font-size: 12pt;
 }
-#mars {
+.panel {
   position: absolute;
-  left: 35%;
-  top: 5%;
   max-width: 20%;
   padding: 2mm;
   border: 1px solid #FF0;
   border-radius: 2mm;
 }
-#mars:hover {
+.panel:hover {
   border-color: #0F0;
+}
+#mars {
+  left: 5%;
+  top: 5%;
+}
+#SimpleGPS {
+  left: 35%;
+  top: 5%;
 }
 #note {
   position: absolute;
@@ -52,14 +58,27 @@ body {
 <body>
 
 <!-- Went live with madengineersworkshop.net on 15 Jul 2014 - Lunariel -->
-<div id="mars">
+<div id="mars" class="panel">
 <a href="mars.html" target="_blank">
 <img src="mars_screen.png" width="100%"></img>
 </a>
 <div id="mars_text">WebGL view of <a href="http://www.thingiverse.com/thing:362133" target="_blank">my model</a> for the <a href="http://www.thingiverse.com/tag:MakerBotMars" target="_blank">MakerBotMars competition</a></div>
 </div>
 
+<div id="SimpleGPS" class="panel">
+<a href="SimpleGPS.html" target="_blank">
+<img src="SimpleGPS_screen.png" width="100%"></img>
+</a>
+<div id="SimpleGPS_text">Simplified GPS and compass app for Firefox</div>
+</div>
+
 <div id="note">
+<div id="note_date">27 Sep 2014</div>
+<br />
+<div id="note_text">SimpleGPS is GPS and compass app for Firefox that shows current coordinates, heading, and target distance and heading. </div>
+<br />
+<div id="note_name">- Lunariel</div>
+<br />
 <div id="note_date">15 July 2014</div>
 <br />
 <div id="note_text">Hello, this Mars Base model is the first entry for the Mad Engineer's Workshop.
@@ -87,17 +106,20 @@ clicky_site_ids.push(100755588);
 
 <script type="text/javascript">
 
-var mars = document.getElementById('mars');
-var mars_text = document.getElementById('mars_text');
-mars.removeChild(mars_text);
+function panelifyText(panel, text) {
+  panel.removeChild(text);
+  
+  panel.addEventListener('mouseenter', function(e) {
+    panel.appendChild(text);
+  });
+  
+  panel.addEventListener('mouseleave', function(e) {
+    panel.removeChild(text);
+  });
+}
 
-mars.addEventListener('mouseenter', function(e) {
-  mars.appendChild(mars_text);
-});
-
-mars.addEventListener('mouseleave', function(e) {
-  mars.removeChild(mars_text);
-});
+panelifyText(document.getElementById('mars'), document.getElementById('mars_text'));
+panelifyText(document.getElementById('SimpleGPS'), document.getElementById('SimpleGPS_text'));
 
 /////////////////////
 // Startup scripts //

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<!--
+Copyright 2014 Lunariel
+MIT License
+Source at https://github.com/Densaugeo/SimpleGPS
+-->
+<html lang="en" manifest="SimpleGPS.appcache">
+<head>
+<meta charset="utf-8">
+<link rel="shortcut icon" href="SimpleGPS-32.png" />
+
+<title>SimpleGPS</title>
+
+<script type="text/javascript">
+// Frame buster
+if(top !== self) {
+  top.location.replace(self.location.href);
+}
+</script>
+
+<style type="text/css">
+body {
+  background: #000;
+  color: #0F0;
+  font-family: 'arial';
+  font-size: 5vmin;
+}
+
+#compass {
+  position: absolute;
+}
+
+.needle {
+  position: absolute;
+  top: 45%;
+  height: 10%;
+  left: 5%;
+  width: 90%;
+  transform: rotate(90deg);
+}
+.needle>div {
+  position: absolute;
+  top: calc(50% - 1px);
+  height: 2px;
+  left: 10%;
+  width: 90%;
+}
+.needle>b {
+  position: absolute;
+  top: calc(50% - 0.5em);
+  vertical-align: center;
+  transform: rotate(270deg);
+}
+#needle {
+  color: #0F0;
+  z-index: 2;
+}
+#needle>div {
+  background: #0F0;
+}
+#target_needle {
+  color: #0FF;
+  z-index: 1;
+  visibility: hidden;
+}
+#target_needle>div {
+  background: #0FF;
+}
+
+#target {
+  position: absolute;
+  bottom: 0;
+  color: #0FF;
+}
+</style>
+</head>
+
+<body>
+Current latitude: <text id="current_latitude">Searching for GPS...</text><br />
+Current longitude: <text id="current_longitude">Searching for GPS...</text><br />
+<text id="update"></text>
+
+<div id="compass">
+  <div id="needle" class="needle">
+    <div></div>
+    <b>N</b>
+  </div>
+  
+  <div id="target_needle" class="needle">
+    <div></div>
+    <b>T</b>
+  </div>
+</div>
+
+<div id="target">
+  Target coordinates (tap to enter): <br />
+  Latitude: <text id="target_latitude"></text><br />
+  Longitude: <text id="target_longitude"></text><br />
+  Distance: <text id="target_distance"></text>| Heading: <text id="target_heading"></text>
+</div>
+
+</body>
+
+<script type="text/javascript">
+
+var currentLatitude = document.getElementById('current_latitude');
+var currentLongitude = document.getElementById('current_longitude');
+var compass = document.getElementById('compass');
+var needle = document.getElementById('needle');
+var targetNeedle = document.getElementById('target_needle');
+var target = document.getElementById('target');
+var targetLatitude = document.getElementById('target_latitude');
+var targetLongitude = document.getElementById('target_longitude');
+var targetDistance = document.getElementById('target_distance');
+var targetHeading = document.getElementById('target_heading');
+var update = document.getElementById('update');
+
+var currentHeading = 0;
+var rEarth = 6371000;
+
+function positionErrorHandler(e) {
+  currentLatitude.textContent = 'ERROR(' + e.code + '): ' + e.message;
+  currentLongitude.textContent = 'ERROR(' + e.code + '): ' + e.message;
+}
+
+function positionHandler(e) {
+  currentLatitude.textContent = e.coords.latitude + '°';
+  currentLongitude.textContent = e.coords.longitude + '°';
+  
+  var φ1 = Math.PI/180*e.coords.latitude;
+  var λ1 = Math.PI/180*e.coords.longitude;
+  var φ2 = Math.PI/180*targetLatitude.number;
+  var λ2 = Math.PI/180*targetLongitude.number;
+  
+  with(Math) {
+    var a = pow(sin((φ2 - φ1)/2), 2) + cos(φ1)*cos(φ2)*pow(sin((λ2 - λ1)/2), 2);
+    var c = 2*atan2(sqrt(a), sqrt(1 - a))
+    var distance = round(rEarth*c);
+    
+    var θ = atan2(sin(λ2 - λ1)*cos(φ2), cos(φ1)*sin(φ2) - sin(φ1)*cos(φ2)*cos(λ2 - λ1));
+  }
+  
+  if(distance > 1000) {
+    targetDistance.textContent = distance/1000 + ' km';
+  } else {
+    targetDistance.textContent = distance + ' m';
+  }
+  
+  targetHeading.number = 180/Math.PI*θ;
+  targetHeading.textContent = Math.round(targetHeading.number) + '°';
+}
+
+function getCoords() {
+  targetNeedle.style.visibility = 'hidden';
+  
+  targetLatitude.number = Number(window.prompt('Enter latitude:'));
+  targetLatitude.textContent = targetLatitude.number + '°';
+  
+  if(typeof targetLatitude.number !== 'number' || targetLatitude.number < -90 || targetLatitude.number > 90) {
+    targetLatitude.textContent = 'Latitude must be a decimal number between -90 and 90'
+    return;
+  }
+  
+  targetLongitude.number = Number(window.prompt('Enter longitude:'));
+  targetLongitude.textContent = targetLongitude.number + '°';
+  
+  if(typeof targetLongitude.number !== 'number' || targetLongitude.number < -180 || targetLongitude.number > 180) {
+    targetLongitude.textContent = 'Longitude must be a decimal number between -180 and 180'
+    return;
+  }
+  
+  targetNeedle.style.visibility = 'visible';
+}
+
+target.addEventListener('click', getCoords);
+target.addEventListener('touch', getCoords);
+
+// Keep compass to the same dimensions after portrait-landscape switch
+function makeSquare() {
+  // Make the compass div a screen-fitting square
+  if(window.innerWidth < window.innerHeight) {
+    // Tall screens
+    compass.style.top = (window.innerHeight - window.innerWidth)/2 + 'px';
+    compass.style.height = window.innerWidth + 'px';
+    compass.style.left = 0;
+    compass.style.width = '100%';
+  } else {
+    // Wide screens
+    compass.style.top = 0;
+    compass.style.height = '100%';
+    compass.style.left = (window.innerWidth - window.innerHeight)/2 + 'px';
+    compass.style.width = window.innerHeight + 'px';
+  }
+}
+makeSquare();
+window.addEventListener('resize', makeSquare);
+
+window.addEventListener('deviceorientation', function(e) {
+  currentHeading = Math.round(10*e.alpha)/10;
+  
+  needle.style.transform = 'rotate(' + (currentHeading + 90) + 'deg)';
+  targetNeedle.style.transform = 'rotate(' + (targetHeading.number + currentHeading + 90) + 'deg)';
+});
+
+// Poll GPS every 10 seconds to save battery
+setInterval(function() {navigator.geolocation.getCurrentPosition(positionHandler, positionErrorHandler);}, 10000);
+
+applicationCache.addEventListener('updateready', function(e) {
+  update.textContent = 'Update available, please refresh';
+});
+
+</script>
+</html>
