@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, user-scalable=no">
 
 <title>A Mad Workshop!</title>
 
@@ -12,80 +13,142 @@ if(top !== self) {
 }
 </script>
 
-<style type='text/css'>
+<link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
+
+<style type="text/css" id="light_colors">
 body {
-  background-color: #000;
-  color: #0F0;
+  background: #FFF;
+}
+#background {
+  background: url('diagram-light.jpg') no-repeat center;
+  background-size: auto 100%;
+}
+#sidebar {
+  color: #888;
+  box-shadow: 0 0 5px 3px #888;
+}
+#sidebar:hover   { box-shadow: 0 0 5px 3px #088; }
+.panel {
+  background: #FFF;
+  box-shadow: 0 0 5px 3px #888;
+}
+.panel:hover     { box-shadow: 0 0 5px 3px #088; }
+.panel_heading   { color: #044; }
+.panel_date      { color: #888; }
+.panel_text      { color: #333; }
+.panel_signature { color: #088; }
+</style>
+
+<style type="text/css" id="dark_colors">
+body {
+  background: #000;
+}
+#background {
+  background: url('diagram-dark.jpg') no-repeat center;
+  background-size: auto 100%;
+}
+#sidebar {
+  color: #888;
+  box-shadow: 0 0 5px 3px #888;
+}
+#sidebar:hover   { box-shadow: 0 0 5px 3px #0FF; }
+.panel {
+  background: #000;
+  box-shadow: 0 0 5px 3px #888;
+}
+.panel:hover     { box-shadow: 0 0 5px 3px #0FF; }
+.panel_heading   { color: #AFF; }
+.panel_date      { color: #888; }
+.panel_text      { color: #CCC; }
+.panel_signature { color: #0FF; }
+</style>
+
+<style type="text/css">
+body {
+  font-family: 'Helvetica';
   font-size: 12pt;
 }
-.panel {
+#background {
   position: absolute;
-  max-width: 20%;
-  padding: 2mm;
-  border: 1px solid #FF0;
-  border-radius: 2mm;
+  top: 0;
+  bottom: 0;
+  left: 48px;
+  right: 0;
+  z-index: -1;
+}
+#sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 48px;
+  z-index: 0;
+}
+#sidebar i {
+  font-size: 24px;
+  margin: 12px;
+}
+.panel {
+  position: relative;
+  top: 12px;
+  left: calc(50% - 156px);
+  max-width: 300px;
+  z-index: 1;
+  margin-bottom: 12px;
+  padding: 6px;
 }
 .panel:hover {
-  border-color: #0F0;
+  z-index: 2;
 }
-#mars {
-  left: 5%;
-  top: 5%;
+.panel_heading {
+  text-align: center;
 }
-#SimpleGPS {
-  left: 35%;
-  top: 5%;
-}
-#note {
-  position: absolute;
-  left: 65%;
-  top: 5%;
-  max-width: 30%;
-  padding: 2mm;
-  border: 1px solid #0FF;
-  border-radius: 2mm;
-}
-#note_name {
+.panel_signature {
   text-align: right;
-  color: #0FF;
-}
-#note_date {
-  color: #888;
 }
 </style>
 </head>
 
 <body>
+<div id="sidebar">
+<i id="contrast_button" class="fa fa-sun-o" title="Flip Contrast"></i>
+</div>
+
+<div id="background">
 
 <!-- Went live with madengineersworkshop.net on 15 Jul 2014 - Lunariel -->
 <div id="mars" class="panel">
 <a href="mars.html" target="_blank">
 <img src="mars_screen.png" width="100%"></img>
 </a>
-<div id="mars_text">WebGL view of <a href="http://www.thingiverse.com/thing:362133" target="_blank">my model</a> for the <a href="http://www.thingiverse.com/tag:MakerBotMars" target="_blank">MakerBotMars competition</a></div>
+<div class="panel_heading">WebGL view of <a href="http://www.thingiverse.com/thing:362133" target="_blank">my model</a> for the <a href="http://www.thingiverse.com/tag:MakerBotMars" target="_blank">MakerBotMars competition</a></div>
+<div id="mars_text">
+<br />
+<div class="panel_date">15 July 2014</div>
+<br />
+<div class="panel_text">Hello, this Mars Base model is the first entry for the Mad Engineer's Workshop.
+It's written with WebGL (and the three.js library), and is also my first attempt at making a 3D printing model.
+Nothing will actually be printed until I get a 3D printer though...</div>
+<br />
+<div class="panel_signature">- Lunariel</div>
+</div>
 </div>
 
 <div id="SimpleGPS" class="panel">
 <a href="SimpleGPS.html" target="_blank">
 <img src="SimpleGPS_screen.png" width="100%"></img>
 </a>
-<div id="SimpleGPS_text">Simplified GPS and compass app for Firefox</div>
+<div class="panel_heading">Simplified GPS and compass app for Firefox</div>
+<div id="SimpleGPS_text">
+<br />
+<div class="panel_date">27 Sep 2014</div>
+<br />
+<div class="panel_text">SimpleGPS is a GPS and compass app for Firefox that shows current coordinates, heading, and target distance and heading. </div>
+<br />
+<div class="panel_signature">- Lunariel</div>
+</div>
 </div>
 
-<div id="note">
-<div id="note_date">27 Sep 2014</div>
-<br />
-<div id="note_text">SimpleGPS is GPS and compass app for Firefox that shows current coordinates, heading, and target distance and heading. </div>
-<br />
-<div id="note_name">- Lunariel</div>
-<br />
-<div id="note_date">15 July 2014</div>
-<br />
-<div id="note_text">Hello, this Mars Base model is the first entry for the Mad Engineer's Workshop.
-It's written with WebGL (and the three.js library), and is also my first attempt at making a 3D printing model.
-Nothing will actually be printed until I get a 3D printer though...</div>
-<br />
-<div id="note_name">- Lunariel</div>
 </div>
 
 <a title="Real Time Web Analytics" style="visibility:hidden" href="http://clicky.com/100755588"><img alt="Real Time Web Analytics" src="//static.getclicky.com/media/links/badge.gif" border="0" /></a>
@@ -118,8 +181,57 @@ function panelifyText(panel, text) {
   });
 }
 
-panelifyText(document.getElementById('mars'), document.getElementById('mars_text'));
-panelifyText(document.getElementById('SimpleGPS'), document.getElementById('SimpleGPS_text'));
+// Move panels to randomized positions
+function throwPanels(panels) {
+  var clearance = 12;
+  
+  // Check if there is enough height and extend if necessary
+  var spaceNeeded = 2*panels.length*panels[0].offsetWidth*panels[0].offsetHeight;
+  var heightNeeded = spaceNeeded/bg.offsetWidth;
+  if(bg.offsetHeight < heightNeeded) {
+    bg.style.height = heightNeeded + 'px';
+  }
+  
+  // Working area:
+  var width = bg.offsetWidth - panels[0].offsetWidth - clearance;
+  var heightPlusPanelHeight = bg.offsetHeight - clearance;
+  
+  for(var i = 0, endi = panels.length; i < endi; ++i) {
+    var xPos = Math.random()*width;
+    var yPos = Math.random()*(heightPlusPanelHeight - panels[i].offsetHeight);
+    
+    // Clamp positions away from edges
+    xPos = Math.max(xPos, clearance);
+    yPos = Math.max(yPos, clearance);
+    
+    panels[i].style.left = xPos + 'px';
+    panels[i].style.top = yPos + 'px';
+    panels[i].style.position = 'absolute';
+  }
+}
+
+var panels = document.getElementsByClassName('panel');
+var bg = document.getElementById('background');
+
+// Randomize only if screen if wide enough. In mobile FF, window.offsetWidth and some css positions ignore viewport settings
+if(bg.offsetWidth > 2.5*panels[0].offsetWidth && screen.width   > 2.5*panels[0].offsetWidth) {
+  throwPanels(panels);
+  
+  panelifyText(document.getElementById('mars'), document.getElementById('mars_text'));
+  panelifyText(document.getElementById('SimpleGPS'), document.getElementById('SimpleGPS_text'));
+}
+
+var darkColors = document.getElementById('dark_colors');
+var head = darkColors.parentNode;
+var contrastFlipped = false;
+
+document.getElementById('contrast_button').addEventListener('click', function(e) {
+  if(contrastFlipped = !contrastFlipped) {
+    head.removeChild(darkColors);
+  } else {
+    head.appendChild(darkColors);
+  }
+});
 
 /////////////////////
 // Startup scripts //
