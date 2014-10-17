@@ -117,6 +117,7 @@ var update = document.getElementById('update');
 
 var currentHeading = 0;
 var rEarth = 6371000;
+var needleOffset = 0; // Factor to smooth over angle difference between portrait and landscape
 
 function positionErrorHandler(e) {
   currentLatitude.textContent = 'ERROR(' + e.code + '): ' + e.message;
@@ -184,12 +185,16 @@ function makeSquare() {
     compass.style.height = window.innerWidth + 'px';
     compass.style.left = 0;
     compass.style.width = '100%';
+    
+    needleOffset = 90;
   } else {
     // Wide screens
     compass.style.top = 0;
     compass.style.height = '100%';
     compass.style.left = (window.innerWidth - window.innerHeight)/2 + 'px';
     compass.style.width = window.innerHeight + 'px';
+    
+    needleOffset = 0;
   }
 }
 makeSquare();
@@ -198,8 +203,8 @@ window.addEventListener('resize', makeSquare);
 window.addEventListener('deviceorientation', function(e) {
   currentHeading = Math.round(10*e.alpha)/10;
   
-  needle.style.transform = 'rotate(' + (currentHeading + 90) + 'deg)';
-  targetNeedle.style.transform = 'rotate(' + (targetHeading.number + currentHeading + 90) + 'deg)';
+  needle.style.transform = 'rotate(' + (currentHeading + needleOffset) + 'deg)';
+  targetNeedle.style.transform = 'rotate(' + (targetHeading.number + currentHeading + needleOffset) + 'deg)';
 });
 
 // Poll GPS every 10 seconds to save battery
