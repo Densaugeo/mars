@@ -24,7 +24,7 @@ body {
   background-size: auto 100%;
 }
 #sidebar {
-  color: #888;
+  background: #FFF;
   box-shadow: 0 0 5px 3px #888;
 }
 #sidebar:hover   { box-shadow: 0 0 5px 3px #088; }
@@ -33,8 +33,10 @@ body {
   box-shadow: 0 0 5px 3px #888;
 }
 .panel:hover     { box-shadow: 0 0 5px 3px #088; }
+.panel_drag      { background: rgba(255, 255, 255, 0.75); }
+.button:hover    { color: #088; }
+.button:active   { color: #080; }
 .panel_heading   { color: #044; }
-.panel_date      { color: #888; }
 .panel_text      { color: #333; }
 .panel_signature { color: #088; }
 </style>
@@ -48,7 +50,7 @@ body {
   background-size: auto 100%;
 }
 #sidebar {
-  color: #888;
+  background: #000;
   box-shadow: 0 0 5px 3px #888;
 }
 #sidebar:hover   { box-shadow: 0 0 5px 3px #0FF; }
@@ -57,8 +59,10 @@ body {
   box-shadow: 0 0 5px 3px #888;
 }
 .panel:hover     { box-shadow: 0 0 5px 3px #0FF; }
+.panel_drag      { background: rgba(0, 0, 0, 0.75); }
+.button:hover    { color: #0FF; }
+.button:active   { color: #0F0; }
 .panel_heading   { color: #AFF; }
-.panel_date      { color: #888; }
 .panel_text      { color: #CCC; }
 .panel_signature { color: #0FF; }
 </style>
@@ -67,6 +71,7 @@ body {
 body {
   font-family: 'Helvetica';
   font-size: 12pt;
+  color: #888;
 }
 #background {
   position: absolute;
@@ -82,10 +87,12 @@ body {
   bottom: 0;
   left: 0;
   width: 48px;
-  z-index: 0;
+  z-index: 1;
 }
-#sidebar i {
+#sidebar > i {
   font-size: 24px;
+  width: 24px;
+  text-align: center;
   margin: 12px;
 }
 .panel {
@@ -93,63 +100,40 @@ body {
   top: 12px;
   left: calc(50% - 156px);
   max-width: 300px;
-  z-index: 1;
+  z-index: 0;
   margin-bottom: 12px;
   padding: 6px;
 }
-.panel:hover {
-  z-index: 2;
+.panel_drag {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  padding: 6px;
+  font-size: 24px;
+  visibility: hidden;
 }
-.panel_heading {
-  text-align: center;
+.panel_image     { width     : 100%  ; }
+.panel_heading   { text-align: center; }
+.panel_expand {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  margin: 6px;
+  font-size: 24px;
+  color: #888;
 }
-.panel_signature {
-  text-align: right;
-}
+.panel_signature { text-align: right ; }
 </style>
 </head>
 
 <body>
 <div id="sidebar">
-<i id="contrast_button" class="fa fa-sun-o" title="Flip Contrast"></i>
+<i id="contrast_button" class="fa fa-adjust button" title="Flip Contrast"></i>
+<i id="clear_button"    class="fa fa-trash-o button" title="Clear Local Storage&#xA;&#xA;This will clear contrast and position settings"></i>
 </div>
 
-<div id="background">
-
-<!-- Went live with madengineersworkshop.net on 15 Jul 2014 - Lunariel -->
-<div id="mars" class="panel">
-<a href="mars.html" target="_blank">
-<img src="mars_screen.png" width="100%"></img>
-</a>
-<div class="panel_heading">WebGL view of <a href="http://www.thingiverse.com/thing:362133" target="_blank">my model</a> for the <a href="http://www.thingiverse.com/tag:MakerBotMars" target="_blank">MakerBotMars competition</a></div>
-<div id="mars_text">
-<br />
-<div class="panel_date">15 July 2014</div>
-<br />
-<div class="panel_text">Hello, this Mars Base model is the first entry for the Mad Engineer's Workshop.
-It's written with WebGL (and the three.js library), and is also my first attempt at making a 3D printing model.
-Nothing will actually be printed until I get a 3D printer though...</div>
-<br />
-<div class="panel_signature">- Lunariel</div>
-</div>
-</div>
-
-<div id="SimpleGPS" class="panel">
-<a href="SimpleGPS.html" target="_blank">
-<img src="SimpleGPS_screen.png" width="100%"></img>
-</a>
-<div class="panel_heading">Simplified GPS and compass app for Firefox</div>
-<div id="SimpleGPS_text">
-<br />
-<div class="panel_date">27 Sep 2014</div>
-<br />
-<div class="panel_text">SimpleGPS is a GPS and compass app for Firefox that shows current coordinates, heading, and target distance and heading. </div>
-<br />
-<div class="panel_signature">- Lunariel</div>
-</div>
-</div>
-
-</div>
+<div id="background"></div>
 
 <a title="Real Time Web Analytics" style="visibility:hidden" href="http://clicky.com/100755588"><img alt="Real Time Web Analytics" src="//static.getclicky.com/media/links/badge.gif" border="0" /></a>
 <script type="text/javascript">
@@ -169,19 +153,185 @@ clicky_site_ids.push(100755588);
 
 <script type="text/javascript">
 
-function panelifyText(panel, text) {
-  panel.removeChild(text);
+var forgeElement = function(tagName, properties, children) {
+  var element = document.createElement(tagName);
+  
+  for(var i in properties) {
+    element[i] = properties[i];
+  }
+  
+  if(children) {
+    for(var i = 0, endi = children.length; i < endi; ++i) {
+      element.appendChild(children[i]);
+    }
+  }
+  
+  return element;
+}
+var fE = forgeElement;
+
+var buildPanel = function(panelData) {
+  var top, dragButton, base, expandButton;
+  
+  var panel =
+    fE('div', {id: panelData.id, className: 'panel'}, [
+      top = fE('div', null, [
+        fE('a', {href: panelData.href, target: '_blank'}, [
+          fE('img', {className: 'panel_image', src: panelData.image}),
+        ]),
+        dragButton = fE('i', {className: 'fa fa-arrows panel_drag button', title: 'Click and drag to move panel'}),
+      ]),
+      base = fE('div', null, [
+        fE('div', {className: 'panel_heading', textContent: panelData.heading}, [
+          expandButton = fE('i', {className: 'fa fa-plus panel_expand button'}),
+        ])
+      ])
+    ]
+  );
+  
+  var expansion = fE('div', {id: panelData.divid}, [
+    fE('br'),
+    fE('div', {className: 'panel_date', textContent: panelData.date}),
+    fE('br'),
+    fE('div', {className: 'panel_text', innerHTML: panelData.text}),
+    fE('br'),
+    fE('div', {className: 'panel_signature', textContent: panelData.signature}),
+  ])
+  
+  document.getElementById('background').appendChild(panel);
   
   panel.addEventListener('mouseenter', function(e) {
-    panel.appendChild(text);
+    if(!dragger.active) {
+      panel.style['z-index'] = 2;
+    }
   });
   
   panel.addEventListener('mouseleave', function(e) {
-    panel.removeChild(text);
+    if(!dragger.active) {
+      panel.style['z-index'] = 0;
+    }
+  });
+  
+  top.addEventListener('mouseenter', function(e) {
+    if(!dragger.active) {
+      dragButton.style.visibility = 'visible';
+    }
+  });
+  
+  top.addEventListener('mouseleave', function(e) {
+    if(!dragger.active) {
+      dragButton.style.visibility = 'hidden';
+    }
+  });
+  
+  var expand = function(e) {
+    if(!dragger.active) {
+      base.appendChild(expansion);
+    }
+  }
+  
+  var collapse = function() {
+    if(!dragger.active) {
+      base.removeChild(expansion);
+    }
+  }
+  
+  base.addEventListener('mouseenter', expand);
+  base.addEventListener('mouseleave', collapse);
+  
+  expandButton.addEventListener('click', function() {
+    if(expandButton.classList.contains('fa-minus')) {
+      expandButton.classList.remove('fa-minus');
+      collapse();
+      base.addEventListener('mouseleave', collapse);
+    }
+    else {
+      expandButton.classList.add('fa-minus');
+      expand();
+      base.removeEventListener('mouseleave', collapse);
+    }
+  });
+  
+  dragButton.addEventListener('mousedown', function(e) {
+    dragger.pickUp(panel, e);
   });
 }
 
-// Move panels to randomized positions
+var dragger = new function() {
+  this.previousX = 0;
+  this.previousY = 0;
+  this.target = null;
+  this.active = false;
+  
+  with(this) this.pickUp = function(element, e) {
+    previousX = e.clientX || 0;
+    previousY = e.clientY || 0;
+    target = element;
+    active = true;
+    
+    document.body.addEventListener('mousemove', moveHandler);
+    document.body.addEventListener('mouseup', drop);
+    document.body.addEventListener('mouseleave', drop);
+  }
+  
+  with(this) this.moveHandler = function(e) {
+    target.style.left = parseInt(target.style.left) + e.clientX - previousX + 'px';
+    target.style.top  = parseInt(target.style.top ) + e.clientY - previousY + 'px';
+    
+    previousX = e.clientX;
+    previousY = e.clientY;
+  }
+  
+  with(this) this.drop = function(e) {
+    document.body.removeEventListener('mousemove', moveHandler);
+    
+    localStorage['dragger_' + target.id + '_left'] = target.style.left;
+    localStorage['dragger_' + target.id + '_top' ] = target.style.top ;
+    target = null;
+    active = false;
+    
+    document.body.removeEventListener('mouseup', drop);
+    document.body.removeEventListener('mouseleave', drop);
+  }
+}
+
+var bg = document.getElementById('background');
+var panels = document.getElementsByClassName('panel');
+var panelDrag = forgeElement('i', {className: 'fa fa-arrows panel_drag button', title: 'Click and drag to move panel'});
+
+buildPanel({
+  id: 'SimpleGPS',
+  divid: 'SimpleGPS_text',
+  href: 'SimpleGPS.html',
+  image: 'SimpleGPS_screen.png',
+  heading: 'Simplified GPS and compass app for Firefox',
+  date: '27 Sep 2014',
+  text: 'SimpleGPS is a GPS and compass app for Firefox that shows current coordinates, heading, and target distance and heading.',
+  signature: '- Lunariel'
+});
+
+// Went live with madengineersworkshop.net on 15 Jul 2014 - Lunariel
+buildPanel({
+  id: 'mars',
+  href: 'mars.html',
+  image: 'mars_screen.png',
+  heading: 'WebGL view of my model for the MakerBotMars competition',
+  divid: 'mars_text',
+  date: '15 July 2014',
+  text: 'Hello, this <a href="http://www.thingiverse.com/thing:362133" target="_blank">Mars Base model</a> is the first entry for the Mad Engineer\'s Workshop. It\'s written with WebGL (and the three.js library), and is also my first attempt at making a 3D printing model. Nothing will actually be printed until I get a 3D printer though...',
+  signature: '- Lunariel'
+});
+
+for(var i = 0, endi = panels.length; i < endi; ++i) {
+  if(localStorage['dragger_' + panels[i].id + '_top']) {
+    panels[i].style.position = 'absolute';
+    
+    panels[i].style.top  = localStorage['dragger_' + panels[i].id + '_top' ];
+    panels[i].style.left = localStorage['dragger_' + panels[i].id + '_left'];
+  }
+}
+
+// Move panels to randomized positions, but avoid overwriting localStorage saved positions
 function throwPanels(panels) {
   var clearance = 12;
   
@@ -197,39 +347,49 @@ function throwPanels(panels) {
   var heightPlusPanelHeight = bg.offsetHeight - clearance;
   
   for(var i = 0, endi = panels.length; i < endi; ++i) {
-    var xPos = Math.random()*width;
-    var yPos = Math.random()*(heightPlusPanelHeight - panels[i].offsetHeight);
-    
-    // Clamp positions away from edges
-    xPos = Math.max(xPos, clearance);
-    yPos = Math.max(yPos, clearance);
-    
-    panels[i].style.left = xPos + 'px';
-    panels[i].style.top = yPos + 'px';
-    panels[i].style.position = 'absolute';
+    if(!localStorage['dragger_' + panels[i].id + '_top'] && !localStorage['dragger_' + panels[i].id + '_left']) {
+      var xPos = Math.random()*width;
+      var yPos = Math.random()*(heightPlusPanelHeight - panels[i].offsetHeight);
+      
+      // Clamp positions away from edges
+      xPos = Math.max(xPos, clearance);
+      yPos = Math.max(yPos, clearance);
+      
+      panels[i].style.left = xPos + 'px';
+      panels[i].style.top = yPos + 'px';
+      panels[i].style.position = 'absolute';
+    }
   }
 }
-
-var panels = document.getElementsByClassName('panel');
-var bg = document.getElementById('background');
 
 // Randomize only if screen if wide enough. In mobile FF, window.offsetWidth and some css positions ignore viewport settings
 if(bg.offsetWidth > 2.5*panels[0].offsetWidth && screen.width   > 2.5*panels[0].offsetWidth) {
   throwPanels(panels);
-  
-  panelifyText(document.getElementById('mars'), document.getElementById('mars_text'));
-  panelifyText(document.getElementById('SimpleGPS'), document.getElementById('SimpleGPS_text'));
 }
+
+document.getElementById('clear_button').addEventListener('click', function(e) {
+  localStorage.clear();
+});
+
+////////////////////////////////////////////
+// Make contrast button swap color scheme //
+////////////////////////////////////////////
 
 var darkColors = document.getElementById('dark_colors');
 var head = darkColors.parentNode;
 var contrastFlipped = false;
 
+if(localStorage.contrast === 'light') {
+  head.removeChild(darkColors);
+}
+
 document.getElementById('contrast_button').addEventListener('click', function(e) {
   if(contrastFlipped = !contrastFlipped) {
     head.removeChild(darkColors);
+    localStorage.contrast = 'light';
   } else {
     head.appendChild(darkColors);
+    localStorage.contrast = 'dark';
   }
 });
 
