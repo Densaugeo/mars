@@ -99,7 +99,7 @@ body {
   position: relative;
   top: 12px;
   left: calc(50% - 156px);
-  max-width: 300px;
+  width: 300px;
   z-index: 0;
   margin-bottom: 12px;
   padding: 6px;
@@ -190,8 +190,6 @@ var buildPanel = function(panelData) {
   );
   
   var expansion = fE('div', {id: panelData.divid}, [
-    fE('br'),
-    fE('div', {className: 'panel_date', textContent: panelData.date}),
     fE('br'),
     fE('div', {className: 'panel_text', innerHTML: panelData.text}),
     fE('br'),
@@ -329,42 +327,6 @@ for(var i = 0, endi = panels.length; i < endi; ++i) {
     panels[i].style.top  = localStorage['dragger_' + panels[i].id + '_top' ];
     panels[i].style.left = localStorage['dragger_' + panels[i].id + '_left'];
   }
-}
-
-// Move panels to randomized positions, but avoid overwriting localStorage saved positions
-function throwPanels(panels) {
-  var clearance = 12;
-  
-  // Check if there is enough height and extend if necessary
-  var spaceNeeded = 2*panels.length*panels[0].offsetWidth*panels[0].offsetHeight;
-  var heightNeeded = spaceNeeded/bg.offsetWidth;
-  if(bg.offsetHeight < heightNeeded) {
-    bg.style.height = heightNeeded + 'px';
-  }
-  
-  // Working area:
-  var width = bg.offsetWidth - panels[0].offsetWidth - clearance;
-  var heightPlusPanelHeight = bg.offsetHeight - clearance;
-  
-  for(var i = 0, endi = panels.length; i < endi; ++i) {
-    if(!localStorage['dragger_' + panels[i].id + '_top'] && !localStorage['dragger_' + panels[i].id + '_left']) {
-      var xPos = Math.random()*width;
-      var yPos = Math.random()*(heightPlusPanelHeight - panels[i].offsetHeight);
-      
-      // Clamp positions away from edges
-      xPos = Math.max(xPos, clearance);
-      yPos = Math.max(yPos, clearance);
-      
-      panels[i].style.left = xPos + 'px';
-      panels[i].style.top = yPos + 'px';
-      panels[i].style.position = 'absolute';
-    }
-  }
-}
-
-// Randomize only if screen if wide enough. In mobile FF, window.offsetWidth and some css positions ignore viewport settings
-if(bg.offsetWidth > 2.5*panels[0].offsetWidth && screen.width   > 2.5*panels[0].offsetWidth) {
-  throwPanels(panels);
 }
 
 document.getElementById('clear_button').addEventListener('click', function(e) {
