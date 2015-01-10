@@ -298,6 +298,17 @@ var panels = document.getElementsByClassName('panel');
 var panelDrag = forgeElement('i', {className: 'fa fa-arrows panel_drag button', title: 'Click and drag to move panel'});
 
 buildPanel({
+  id: 'castle',
+  divid: 'castle_text',
+  href: 'castle.html',
+  image: 'castle_screen.png',
+  heading: 'A Castle in the Cloud',
+  date: '9 Jan 2015',
+  text: 'WebGL demo built with THREE.js. Features touchscreen, accelerometer, and gamepad control.',
+  signature: '- Lunariel'
+});
+
+buildPanel({
   id: 'SimpleGPS',
   divid: 'SimpleGPS_text',
   href: 'SimpleGPS.html',
