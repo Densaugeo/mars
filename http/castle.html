@@ -55,40 +55,6 @@ canvas {
   background-color: #000;
 }
 </style>
-
-<script type="x-shader/x-vertex" id="vertexShaderSource">
-/**
- * The psychedelic vertex shader
- * attribute mat4 projectionMatrix from Three.js
- * attribute mat4 modelViewMatrix from Three.js
- * attribute vec3 position from Three.js
- * attribute vec3 normal from Three.js
- */
-
-varying vec3 vNormal;
-
-void main()
-{
-  vNormal = normal;
-  
-  gl_Position = projectionMatrix *
-                modelViewMatrix *
-                vec4(position,1.0);
-}
-</script>
-
-<script type="x-shader/x-fragment" id="fragmentShaderSource">
-// The psychedelic fragment shader
-
-varying vec3 vNormal;
-
-void main()
-{
-  //gl_FragColor = vec4((vNormal.x + 1.0)/2.0, (vNormal.y + 1.0)/2.0, (vNormal.z + 1.0)/2.0, 1.0);
-  gl_FragColor = vec4(abs(vNormal.x), abs(vNormal.y), abs(vNormal.z), 1.0);
-}
-</script>
-
 </head>
 
 <body id="body">
@@ -166,14 +132,26 @@ clicky_site_ids.push(100755588);
 // UI //
 ////////
 
+var grids = new THREE.Densaugeo.CoordinateMaterial();
+var trippyGridShader = new THREE.Densaugeo.CoordinateMaterial({side: THREE.DoubleSide, local: true, showAxes: new THREE.Vector3(0, 0, 0)});
+var ghosty = new THREE.Densaugeo.PositionMaterial({transparent: true, alpha: 0.8});
+var normalses = new THREE.Densaugeo.NormalMaterial();
+var weedShader = new THREE.Densaugeo.PsychMaterial();
+
+var specialShaders = [grids, trippyGridShader, ghosty, normalses, weedShader];
+
 var changeMaterials = function(object) {
   if(object instanceof THREE.Mesh) {
-    if(object.material === weedShader) {
-      object.material = object.meshMaterial;
-    }
-    else {
-      object.meshMaterial = object.material;
-      object.material = weedShader;
+    switch(specialShaders.indexOf(object.material)) {
+      case -1:
+        object.originalMaterial = object.material;
+        object.material = specialShaders[0];
+        break;
+      case specialShaders.length - 1:
+        object.material = object.originalMaterial;
+        break;
+      default:
+        object.material = specialShaders[specialShaders.indexOf(object.material) + 1];
     }
   }
   
@@ -238,9 +216,6 @@ document.getElementById('fullscreen_button').addEventListener('click', function(
 // THREE setup //
 /////////////////
 
-var weedShader = new THREE.ShaderMaterial({vertexShader:   document.getElementById("vertexShaderSource"  ).text,
-                                           fragmentShader: document.getElementById("fragmentShaderSource").text});
-
 var scene = new THREE.Scene();
 
 var camera = new THREE.PerspectiveCamera(45, (window.innerWidth - 48)/window.innerHeight, 1, 1000);
@@ -250,6 +225,7 @@ camera.matrix.set(
   0, 0.8663473129272461, 0.49944186210632324, 27.35080909729004,
   0, 0, 0, 1
 );
+
 scene.add(camera);
 
 var ambientLight = new THREE.AmbientLight(0x7F7F7F);
@@ -328,6 +304,7 @@ var models = [
   "models/Gilded_Keep_Battlement.json",
   "models/Gilded_Keep_Corner.json",
   "models/Gilded_Keep_Wall.json",
+  "models/Ground.json",
   "models/Harbor_Bridge.json",
   "models/Harbor_Gate.json",
   "models/Harbor_Gate_Mirrored.json",
@@ -347,6 +324,9 @@ var models = [
 
 var f3D = THREE.Densaugeo.forgeObject3D;
 var fM  = THREE.Densaugeo.forgeMesh;
+
+//scene.add(f3D(THREE.Mesh, {geometry: new THREE.PlaneGeometry(128, 128, 1, 1), material: waterShader, position: [0, 0, -0.5]}));
+scene.add(water = f3D(THREE.Mesh, {geometry: new THREE.PlaneGeometry(128, 128, 1, 1), material: new THREE.Densaugeo.WaterMaterial({side: THREE.DoubleSide}), position: [0, 0, -0.5]}));
 
 loader.loadAll(models, function(geometries, materialses) {
   var geometry, material;
@@ -421,7 +401,6 @@ loader.loadAll(models, function(geometries, materialses) {
     fM('Gilded_Keep_Battlement', {position: [ 2, -3, 0]}),
     fM('Gilded_Keep_Battlement', {position: [ 3, -2, 0], euler: [0, 0, 0.5*Math.PI]}),
     fM('Gilded_Keep_Battlement', {position: [ 3,  2, 0], euler: [0, 0, 0.5*Math.PI]}),
-    fM('Gilded_Keep_Battlement', {position: [ 2,  3, 0], euler: [0, 0,     Math.PI]}),
     fM('Gilded_Keep_Battlement', {position: [-2,  3, 0], euler: [0, 0,     Math.PI]}),
     fM('Gilded_Keep_Battlement', {position: [-3, -2, 0], euler: [0, 0, 1.5*Math.PI]}),
   ]);
@@ -454,6 +433,7 @@ loader.loadAll(models, function(geometries, materialses) {
   ]);
   
   scene.add(
+    ground = fM('Ground', {}),
     fortress = f3D(THREE.Object3D, {position: [0, 0, 0]}, [
       fM('Fortress_Gate_1'       , {position: [ 0  , -21   , 0  ]}),
       fM('Fortress_Gate_1_R_Door', {position: [-1.5, -25   , 4  ]}),
@@ -657,18 +637,27 @@ loader.loadAll(models, function(geometries, materialses) {
   );
 });
 
+
+
+
+
+
+
 /////////////////////////
 // Tick initialization //
 /////////////////////////
 
-var timeDelta = 0, timePrevious;
+var timePrevious = Date.now(), timeDelta = 0;
 
-function tick()
-{
-  // note: three.js includes requestAnimationFrame shim
-  requestAnimationFrame(tick);
+function tick() {
+  timeDelta = -timePrevious + (timePrevious = Date.now());
+  
+  // Also updates scene-wide shader materials, because they are applied to the water mesh too
+  if(water.material.tick) water.material.tick(timeDelta/1000);
   
   renderer.render(scene, camera);
+  
+  requestAnimationFrame(tick);
 }
 
 tick();
