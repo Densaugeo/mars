@@ -13,126 +13,33 @@ if(top !== self) {
 }
 </script>
 
+<script type="text/javascript" src="draggabilly.pkgd.min.js"></script>
+<script type="text/javascript" src="EventEmitter.min.js"></script>
+<script type="text/javascript" src="panelui.js"></script>
+
 <link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
-
-<style type="text/css" id="light_colors">
-body {
-  background: #FFF;
-}
-#background {
-  background: url('diagram-light.jpg') no-repeat center;
-  background-size: auto 100%;
-}
-#sidebar {
-  background: #FFF;
-  box-shadow: 0 0 5px 3px #888;
-}
-#sidebar:hover   { box-shadow: 0 0 5px 3px #088; }
-.panel {
-  background: #FFF;
-  box-shadow: 0 0 5px 3px #888;
-}
-.panel:hover     { box-shadow: 0 0 5px 3px #088; }
-.panel_drag      { background: rgba(255, 255, 255, 0.75); }
-.button:hover    { color: #088; }
-.button:active   { color: #080; }
-.panel_heading   { color: #044; }
-.panel_text      { color: #333; }
-.panel_signature { color: #088; }
-</style>
-
-<style type="text/css" id="dark_colors">
-body {
-  background: #000;
-}
-#background {
-  background: url('diagram-dark.jpg') no-repeat center;
-  background-size: auto 100%;
-}
-#sidebar {
-  background: #000;
-  box-shadow: 0 0 5px 3px #888;
-}
-#sidebar:hover   { box-shadow: 0 0 5px 3px #0FF; }
-.panel {
-  background: #000;
-  box-shadow: 0 0 5px 3px #888;
-}
-.panel:hover     { box-shadow: 0 0 5px 3px #0FF; }
-.panel_drag      { background: rgba(0, 0, 0, 0.75); }
-.button:hover    { color: #0FF; }
-.button:active   { color: #0F0; }
-.panel_heading   { color: #AFF; }
-.panel_text      { color: #CCC; }
-.panel_signature { color: #0FF; }
-</style>
+<link rel="stylesheet" href="panelui_light.css" id="light_colors">
+<link rel="stylesheet" href="panelui_dark.css" id="dark_colors">
+<link rel="stylesheet" href="panelui.css">
 
 <style type="text/css">
-body {
-  font-family: 'Helvetica';
-  font-size: 12pt;
-  color: #888;
-}
-#background {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 48px;
-  right: 0;
-  z-index: -1;
-}
-#sidebar {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 48px;
-  z-index: 1;
-}
-#sidebar > i {
-  font-size: 24px;
-  width: 24px;
-  text-align: center;
-  margin: 12px;
-}
 .panel {
   position: relative;
   top: 12px;
   left: calc(50% - 156px);
   width: 300px;
-  z-index: 0;
   margin-bottom: 12px;
-  padding: 6px;
 }
-.panel_drag {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 1;
-  padding: 6px;
-  font-size: 24px;
-  visibility: hidden;
+
+.panel_image {
+  width: 100%;
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
-.panel_image     { width     : 100%  ; }
-.panel_heading   { text-align: center; }
-.panel_expand {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  margin: 6px;
-  font-size: 24px;
-  color: #888;
-}
-.panel_signature { text-align: right ; }
 </style>
 </head>
 
 <body>
-<div id="sidebar">
-<i id="contrast_button" class="fa fa-adjust button" title="Flip Contrast"></i>
-<i id="clear_button"    class="fa fa-trash-o button" title="Clear Local Storage&#xA;&#xA;This will clear contrast and position settings"></i>
-</div>
-
 <div id="background"></div>
 
 <a title="Real Time Web Analytics" style="visibility:hidden" href="http://clicky.com/100755588"><img alt="Real Time Web Analytics" src="//static.getclicky.com/media/links/badge.gif" border="0" /></a>
@@ -153,200 +60,68 @@ clicky_site_ids.push(100755588);
 
 <script type="text/javascript">
 
-var forgeElement = function(tagName, properties, children) {
-  var element = document.createElement(tagName);
-  
-  for(var i in properties) {
-    element[i] = properties[i];
-  }
-  
-  if(children) {
-    for(var i = 0, endi = children.length; i < endi; ++i) {
-      element.appendChild(children[i]);
-    }
-  }
-  
-  return element;
-}
-var fE = forgeElement;
+var fE = PanelUI.forgeElement;
 
-var buildPanel = function(panelData) {
-  var top, dragButton, base, expandButton;
+var ProjectPanel = function(options) {
+  if(options.closeButton == null) {
+    options.closeButton = false;
+  }
   
-  var panel =
-    fE('div', {id: panelData.id, className: 'panel'}, [
-      top = fE('div', null, [
-        fE('a', {href: panelData.href, target: '_blank'}, [
-          fE('img', {className: 'panel_image', src: panelData.image}),
-        ]),
-        dragButton = fE('i', {className: 'fa fa-arrows panel_drag button', title: 'Click and drag to move panel'}),
-      ]),
-      base = fE('div', null, [
-        fE('div', {className: 'panel_heading', textContent: panelData.heading}, [
-          expandButton = fE('i', {className: 'fa fa-plus panel_expand button'}),
-        ])
-      ])
-    ]
+  PanelUI.Panel.call(this, options);
+  
+  this.domElement.appendChild(
+    fE('a', {href: options.href}, [
+      fE('img', {className: 'panel_image', src: options.image}),
+    ])
   );
   
-  var expansion = fE('div', {id: panelData.divid}, [
-    fE('br'),
-    fE('div', {className: 'panel_text', innerHTML: panelData.text}),
-    fE('br'),
-    fE('div', {className: 'panel_signature', textContent: panelData.signature}),
-  ])
+  this.domElement.appendChild(
+    fE('text', {className: 'panel_text', innerHTML: options.text})
+  );
   
-  document.getElementById('background').appendChild(panel);
-  
-  panel.addEventListener('mouseenter', function(e) {
-    if(!dragger.active) {
-      panel.style.zIndex = 2;
-    }
-  });
-  
-  panel.addEventListener('mouseleave', function(e) {
-    if(!dragger.active) {
-      panel.style.zIndex = 0;
-    }
-  });
-  
-  top.addEventListener('mouseenter', function(e) {
-    if(!dragger.active) {
-      dragButton.style.visibility = 'visible';
-    }
-  });
-  
-  top.addEventListener('mouseleave', function(e) {
-    if(!dragger.active) {
-      dragButton.style.visibility = 'hidden';
-    }
-  });
-  
-  var expand = function(e) {
-    if(!dragger.active) {
-      base.appendChild(expansion);
-    }
-  }
-  
-  var collapse = function() {
-    if(!dragger.active) {
-      base.removeChild(expansion);
-    }
-  }
-  
-  base.addEventListener('mouseenter', expand);
-  base.addEventListener('mouseleave', collapse);
-  
-  expandButton.addEventListener('click', function() {
-    if(expandButton.classList.contains('fa-minus')) {
-      expandButton.classList.remove('fa-minus');
-      collapse();
-      base.addEventListener('mouseleave', collapse);
-    }
-    else {
-      expandButton.classList.add('fa-minus');
-      expand();
-      base.removeEventListener('mouseleave', collapse);
-    }
-  });
-  
-  dragButton.addEventListener('mousedown', function(e) {
-    dragger.pickUp(panel, e);
-  });
 }
+ProjectPanel.prototype = Object.create(PanelUI.Panel.prototype);
+ProjectPanel.prototype.constructor = ProjectPanel;
 
-var dragger = new function() {
-  this.previousX = 0;
-  this.previousY = 0;
-  this.target = null;
-  this.active = false;
-  
-  with(this) this.pickUp = function(element, e) {
-    previousX = e.clientX || 0;
-    previousY = e.clientY || 0;
-    target = element;
-    active = true;
-    
-    document.body.addEventListener('mousemove', moveHandler);
-    document.body.addEventListener('mouseup', drop);
-    document.body.addEventListener('mouseleave', drop);
-  }
-  
-  with(this) this.moveHandler = function(e) {
-    target.style.left = parseInt(target.style.left) + e.clientX - previousX + 'px';
-    target.style.top  = parseInt(target.style.top ) + e.clientY - previousY + 'px';
-    
-    previousX = e.clientX;
-    previousY = e.clientY;
-  }
-  
-  with(this) this.drop = function(e) {
-    document.body.removeEventListener('mousemove', moveHandler);
-    
-    localStorage['dragger_' + target.id + '_left'] = target.style.left;
-    localStorage['dragger_' + target.id + '_top' ] = target.style.top ;
-    target = null;
-    active = false;
-    
-    document.body.removeEventListener('mouseup', drop);
-    document.body.removeEventListener('mouseleave', drop);
-  }
-}
-
-var bg = document.getElementById('background');
-var panels = document.getElementsByClassName('panel');
-var panelDrag = forgeElement('i', {className: 'fa fa-arrows panel_drag button', title: 'Click and drag to move panel'});
-
-buildPanel({
+new ProjectPanel({
   id: 'castle',
-  divid: 'castle_text',
   href: 'castle.html',
   image: 'castle_screen.png',
   heading: 'A Castle in the Cloud',
   date: '9 Jan 2015',
   text: 'WebGL demo built with THREE.js. Features touchscreen, accelerometer, and gamepad control.',
-  signature: '- Lunariel'
 });
 
-buildPanel({
+new ProjectPanel({
   id: 'SimpleGPS',
-  divid: 'SimpleGPS_text',
   href: 'SimpleGPS.html',
   image: 'SimpleGPS_screen.png',
   heading: 'Simplified GPS and compass app for Firefox',
   date: '27 Sep 2014',
   text: 'SimpleGPS is a GPS and compass app for Firefox that shows current coordinates, heading, and target distance and heading.',
-  signature: '- Lunariel'
 });
 
 // Went live with madengineersworkshop.net on 15 Jul 2014 - Lunariel
-buildPanel({
+new ProjectPanel({
   id: 'mars',
   href: 'mars.html',
   image: 'mars_screen.png',
   heading: 'WebGL view of my model for the MakerBotMars competition',
-  divid: 'mars_text',
   date: '15 July 2014',
   text: 'Hello, this <a href="http://www.thingiverse.com/thing:362133" target="_blank">Mars Base model</a> is the first entry for the Mad Engineer\'s Workshop. It\'s written with WebGL (and the three.js library), and is also my first attempt at making a 3D printing model. Nothing will actually be printed until I get a 3D printer though...',
-  signature: '- Lunariel'
 });
 
-for(var i = 0, endi = panels.length; i < endi; ++i) {
-  if(localStorage['dragger_' + panels[i].id + '_top']) {
-    panels[i].style.position = 'absolute';
-    
-    panels[i].style.top  = localStorage['dragger_' + panels[i].id + '_top' ];
-    panels[i].style.left = localStorage['dragger_' + panels[i].id + '_left'];
-  }
-}
+var sidebar = new PanelUI.Sidebar();
 
-document.getElementById('clear_button').addEventListener('click', function(e) {
+sidebar.addButton({buttonName: 'land', faClass: 'fa-university', title: 'Landing page'});
+sidebar.on('land', function(e) {
+  document.location.href = document.location.origin + '/index.html';
+});
+
+sidebar.addButton({buttonName: 'clear', faClass: 'fa-recycle', title: 'Clear local storage'});
+sidebar.on('clear', function(e) {
   localStorage.clear();
 });
-
-////////////////////////////////////////////
-// Make contrast button swap color scheme //
-////////////////////////////////////////////
 
 var darkColors = document.getElementById('dark_colors');
 var head = darkColors.parentNode;
@@ -356,7 +131,8 @@ if(localStorage.contrast === 'light') {
   head.removeChild(darkColors);
 }
 
-document.getElementById('contrast_button').addEventListener('click', function(e) {
+sidebar.addButton({buttonName: 'contrast', faClass: 'fa-adjust', title: 'Flip Contrast'});
+sidebar.on('contrast', function(e) {
   if(contrastFlipped = !contrastFlipped) {
     head.removeChild(darkColors);
     localStorage.contrast = 'light';

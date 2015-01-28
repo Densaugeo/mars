@@ -1,0 +1,37 @@
+body {
+  color: #444;
+  background: #FFF;
+}
+#background {
+  background: url('diagram-light.jpg') no-repeat center;
+  background-size: auto 100%;
+}
+#sidebar {
+  background: #FFF;
+  box-shadow: 0 0 5px 3px #888;
+}
+#sidebar:hover {
+  box-shadow: 0 0 5px 3px #088;
+}
+.button:hover {
+  color: #088;
+}
+.button:active {
+  color: #080;
+}
+.button_keypress {
+  color: #080;
+}
+.panel {
+  background: #FFF;
+  box-shadow: 0 0 5px 3px #888;
+}
+.panel:hover {
+  box-shadow: 0 0 5px 3px #088;
+}
+.panel_close {
+  background: rgba(255, 255, 255, 0.75);
+}
+.panel_heading {
+  color: #044;
+}

@@ -13,10 +13,16 @@ if(top !== self) {
 }
 </script>
 
-<link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
-
+<script type="text/javascript" src="draggabilly.pkgd.min.js"></script>
+<script type="text/javascript" src="EventEmitter.min.js"></script>
+<script type="text/javascript" src="panelui.js"></script>
 <script type="text/javascript" src="three.min.js"></script>
 <script type="text/javascript" src="three.Densaugeo.js"></script>
+
+<link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="panelui_light.css" id="light_colors">
+<link rel="stylesheet" href="panelui_dark.css" id="dark_colors">
+<link rel="stylesheet" href="panelui.css">
 
 <style type="text/css">
 canvas {
@@ -25,91 +31,20 @@ canvas {
   bottom:   0;
   left:     48px;
   right:    0;
-  z-index:  0;
+  z-index: -1;
   padding:  0;
   border:   none;
   margin:   0;
 }
-#sidebar {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 48px;
-  z-index: 1;
-}
-#sidebar > i {
-  font-size: 24px;
-  width: 24px;
-  text-align: center;
-  margin: 12px;
-}
 
 #help {
-  position: absolute;
-  top:      10px;
-  left:     58px;
-  z-index:  1;
-  visibility: hidden;
-  color:    #FFF;
-  background-color: #000;
+  top: 12px;
+  left: 60px;
 }
 </style>
 </head>
 
-<body id="body">
-
-<div id='sidebar'>
-<i id="help_button" class="fa fa-question button" title="F1 - Help"></i>
-<i id="shader_button" class="fa fa-eye button" title="F2 - Trippy shader"></i>
-<i id="fullscreen_button" class="fa fa-arrows-alt button" title="F3 - Fullscreen"></i>
-</div>
-
-<text id='help'>
-Touchscreen:
-<br />
-First finger drag - Pan
-<br />
-Second finger drag - Rotate
-<br />
-Tilt while touching screen - Rotate
-<br />
-Slide along right edge - Throttle
-<br />
-<br />
-Mouse:
-<br />
-Left click and drag - Pan
-<br />
-Right click and drag - Rotate
-<br />
-Scroll wheel - Dolly
-<br />
-Shift click - Activate mouse look
-<br />
-Esc - Exit mouse look
-<br />
-<br />
-Keyboard:
-<br />
-W/S - Fly forward/backward
-<br />
-A/D - Strafe left/right
-<br />
-E/C - Ascend/Descend
-<br />
-Arrows - Turn
-<br />
-<br />
-Gamepad (press any face button to activate):
-<br />
-Left stick - Pan
-<br />
-Right stick - Turn
-<br />
-Left/right trigger - Throttle back/forward
-</text>
-
+<body>
 <a title="Real Time Web Analytics" style="visibility:hidden" href="http://clicky.com/100755588"><img alt="Real Time Web Analytics" src="//static.getclicky.com/media/links/badge.gif" border="0" /></a>
 <script type="text/javascript">
 var clicky_site_ids = clicky_site_ids || [];
@@ -131,6 +66,18 @@ clicky_site_ids.push(100755588);
 ////////
 // UI //
 ////////
+
+var sidebar = new PanelUI.Sidebar();
+
+sidebar.addButton({buttonName: 'land', faClass: 'fa-university', title: 'Landing page'});
+sidebar.on('land', function(e) {
+  document.location.href = document.location.origin + '/index.html';
+});
+
+sidebar.addButton({buttonName: 'help', faClass: 'fa-question', title: 'Help'});
+sidebar.on('help', function(e) {
+  helpPanel.isOpen() ? helpPanel.close() : helpPanel.open();
+});
 
 var grids = new THREE.Densaugeo.CoordinateMaterial();
 var trippyGridShader = new THREE.Densaugeo.CoordinateMaterial({side: THREE.DoubleSide, local: true, showAxes: new THREE.Vector3(0, 0, 0)});
@@ -162,6 +109,11 @@ var changeMaterials = function(object) {
   }
 }
 
+sidebar.addButton({buttonName: 'shader', faClass: 'fa-eye', repeatable: true, title: 'Trippy shader'});
+sidebar.on('shader', function(e) {
+  changeMaterials(scene);
+});
+
 if(HTMLElement.prototype.requestFullscreen == null) {
   HTMLElement.prototype.requestFullscreen = HTMLElement.prototype.msRequestFullscreen || HTMLElement.prototype.mozRequestFullScreen || HTMLElement.prototype.webkitRequestFullscreen;
 }
@@ -172,45 +124,82 @@ var getFullscreenElement = function() {
   return document.fullscreenElement || document.msFullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement;
 }
 
-document.addEventListener('keydown', function(e) {
-  switch(e.keyCode) {
-    case 112: // F1 - Toggle help
-      var style = document.getElementById('help').style;
-      style.visibility = style.visibility === 'hidden' ? 'visible' : 'hidden';
-      break;
-    case 113: // F2 - Toggle shader
-      changeMaterials(scene);
-      break;
-    case 114: // F3 - Fullscreen
-      e.preventDefault();
-      
-      if(getFullscreenElement() == null) {
-        document.body.requestFullscreen();
-      } else {
-        document.exitFullscreen();
-      }
-      break;
-  }
-});
-
-document.getElementById('help_button').addEventListener('click', function(e) {
-  var style = document.getElementById('help').style;
-  style.visibility = style.visibility === 'visible' ? 'hidden' : 'visible';
-});
-
-document.getElementById('shader_button').addEventListener('click', function(e) {
-  changeMaterials(scene);
-});
-
-document.getElementById('fullscreen_button').addEventListener('click', function(e) {
-  e.preventDefault();
-  
+sidebar.addButton({buttonName: 'fs', faClass: 'fa-arrows-alt', title: 'Fullscreen'});
+sidebar.on('fs', function(e) {
   if(getFullscreenElement() == null) {
     document.body.requestFullscreen();
   } else {
     document.exitFullscreen();
   }
 });
+
+var darkColors = document.getElementById('dark_colors');
+var head = darkColors.parentNode;
+var contrastFlipped = false;
+
+if(localStorage.contrast === 'light') {
+  head.removeChild(darkColors);
+}
+
+sidebar.addButton({buttonName: 'contrast', faClass: 'fa-adjust', title: 'Flip Contrast'});
+sidebar.on('contrast', function(e) {
+  if(contrastFlipped = !contrastFlipped) {
+    head.removeChild(darkColors);
+    localStorage.contrast = 'light';
+  } else {
+    head.appendChild(darkColors);
+    localStorage.contrast = 'dark';
+  }
+});
+
+sidebar.addButton({buttonName: 'clear', faClass: 'fa-recycle', title: 'Clear local storage'});
+sidebar.on('clear', function(e) {
+  localStorage.clear();
+});
+
+var helpPanel = new PanelUI.Panel({id: 'help', heading: 'Controls:', startOpen: false});
+helpPanel.domElement.appendChild(fE('div', {}, [
+  fE('text', {textContent: 'Touchscreen:'}),
+  fE('br'),
+  fE('text', {textContent: 'First finger drag - Pan'}),
+  fE('br'),
+  fE('text', {textContent: 'Second finger drag - Rotate'}),
+  fE('br'),
+  fE('text', {textContent: 'Slide along right edge - Throttle'}),
+  fE('br'),
+  fE('br'),
+  fE('text', {textContent: 'Mouse:'}),
+  fE('br'),
+  fE('text', {textContent: 'Left click and drag - Pan'}),
+  fE('br'),
+  fE('text', {textContent: 'Right click and drag - Rotate'}),
+  fE('br'),
+  fE('text', {textContent: 'Scroll wheel - Dolly'}),
+  fE('br'),
+  fE('text', {textContent: 'Shift click - Activate mouse look'}),
+  fE('br'),
+  fE('text', {textContent: 'Esc - Exit mouse look'}),
+  fE('br'),
+  fE('br'),
+  fE('text', {textContent: 'Keyboard:'}),
+  fE('br'),
+  fE('text', {textContent: 'W/S - Fly forward/backward'}),
+  fE('br'),
+  fE('text', {textContent: 'A/D - Strafe left/right'}),
+  fE('br'),
+  fE('text', {textContent: 'E/C - Ascend/Descend'}),
+  fE('br'),
+  fE('text', {textContent: 'Arrows - Turn'}),
+  fE('br'),
+  fE('br'),
+  fE('text', {textContent: 'Gamepad (press any face button to activate):'}),
+  fE('br'),
+  fE('text', {textContent: 'Left stick - Pan'}),
+  fE('br'),
+  fE('text', {textContent: 'Right stick - Turn'}),
+  fE('br'),
+  fE('text', {textContent: 'Left/right trigger - Throttle back/forward'}),
+]));
 
 /////////////////
 // THREE setup //
@@ -636,12 +625,6 @@ loader.loadAll(models, function(geometries, materialses) {
     ])
   );
 });
-
-
-
-
-
-
 
 /////////////////////////
 // Tick initialization //

@@ -1,0 +1,37 @@
+body {
+  color: #CCC;
+  background: #000;
+}
+#background {
+  background: url('diagram-dark.jpg') no-repeat center;
+  background-size: auto 100%;
+}
+#sidebar {
+  background: #000;
+  box-shadow: 0 0 5px 3px #888;
+}
+#sidebar:hover {
+  box-shadow: 0 0 5px 3px #0FF;
+}
+.button:hover {
+  color: #0FF;
+}
+.button:active {
+  color: #0F0;
+}
+.button_keypress {
+  color: #0F0;
+}
+.panel {
+  background: #000;
+  box-shadow: 0 0 5px 3px #888;
+}
+.panel:hover {
+  box-shadow: 0 0 5px 3px #0FF;
+}
+.panel_close {
+  background: rgba(0, 0, 0, 0.75);
+}
+.panel_heading {
+  color: #AFF;
+}
