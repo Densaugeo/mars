@@ -1,6 +1,6 @@
 /**
  * Creates a THREE.Object3D castle
- * Dependencies: THREE.js, THREE.Densaugeo.js, bunch of models
+ * Dependencies: THREE.js, THREE.Densaugeo.js, EventEmitter.js, bunch of models
  * 
  * Usage:
  * 1 - Include this file
@@ -16,7 +16,7 @@ if(window.THREE.Densaugeo == null) {
   console.error('castleMap.js requires THREE.Densaugeo.js');
 }
 
-castleMap = {};
+castleMap = new EventEmitter();
 
 castleMap.castle = new THREE.Object3D();
 
@@ -90,7 +90,7 @@ var fM  = THREE.Densaugeo.forgeMesh;
 
 var loader = new THREE.Densaugeo.JSONMultiLoader();
 
-castleMap.load = function(callback) {
+castleMap.load = function() {
   loader.loadAll(castleMap.modelPaths, function(geometries, materialses) {
     var geometry, material;
     
@@ -399,8 +399,8 @@ castleMap.load = function(callback) {
       ])
     ); // castleMap.castle
     
-    if(callback) {
-      callback();
-    }
+    castleMap.emit('loaded');
   }); // Loader.loadAll();
+  
+  castleMap.emit('loading');
 } // castleMap.load
