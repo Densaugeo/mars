@@ -1,5 +1,5 @@
 body {
-  color: #CCC;
+  color: #DDD;
   background: #000;
 }
 #background {
@@ -10,23 +10,17 @@ body {
   background: #000;
   box-shadow: 0 0 5px 3px #888;
 }
-#sidebar:hover {
+#sidebar:hover,
+#sidebar:focus {
   box-shadow: 0 0 5px 3px #0FF;
 }
-.button:hover {
-  color: #0FF;
-}
-.button:active {
-  color: #0F0;
-}
-.button_keypress {
-  color: #0F0;
-}
+
 .panel {
   background: #000;
   box-shadow: 0 0 5px 3px #888;
 }
-.panel:hover {
+.panel:hover,
+.panel:focus {
   box-shadow: 0 0 5px 3px #0FF;
 }
 .panel_close {
@@ -34,4 +28,14 @@ body {
 }
 .panel_heading {
   color: #AFF;
+}
+
+.button:hover {
+  color: #0FF;
+}
+.button:active {
+  color: #0F0;
+}
+.button:focus {
+  outline: 1px solid #0FF;
 }

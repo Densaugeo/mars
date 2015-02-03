@@ -21,16 +21,17 @@ var fE = PanelUI.forgeElement;
  * Icons come from Font Awesome and are specified in the faClass option
  * 
  * var sidebar = new PanelUI.Sidebar();
- * sidebar.addButton({buttonName: 'do_stuff', faClass: 'fa-question', title: 'Tooltip text', repeatable: false});
+ * sidebar.addButton({buttonName: 'do_stuff', faClass: 'fa-question', title: 'Tooltip text'});
  * sidebar.on('do_stuff', function() {console.log('Doing stuff')});
  * sidebar.on('trigger', function(e) {console.log(e.buttonName === 'do_stuff')});
  */
 PanelUI.Sidebar = function() {
   EventEmitter.call(this);
   
-  this.domElement = fE('div', {id: 'sidebar'});
+  this.domElement = fE('div', {id: 'sidebar', tabIndex: 1, accessKey: '1'});
   this.children = this.domElement.children;
   document.body.appendChild(this.domElement);
+  this.domElement.title = 'Key: ' + this.domElement.accessKeyLabel;
   
   this.keyCodesToButtonIndices = {49: 0, 50: 1, 51: 2, 52: 3, 53: 4, 54: 5, 55: 6, 56: 7, 57: 8, 58: 9, 48: 10, 173: 11, 61: 12};
   this.buttonIndicesToKeyChars = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='];
@@ -39,39 +40,30 @@ PanelUI.Sidebar = function() {
     options = options || {};
     
     var element = fE('i', {
-      buttonName: options.buttonName || 'Not yet named',
       className : 'fa ' + 'button ' + (options.faClass || 'fa-question'),
       title     : (options.title || 'Not yet described') + '\n\nKey: ' + buttonIndicesToKeyChars[children.length],
-      repeatable: options.repeatable || false,
+      tabIndex  : 0,
+    });
+    
+    element.addEventListener('click', function(/*Event*/ e) {
+      emit('trigger', {buttonName: options.buttonName});
+      emit(options.buttonName);
     });
     
     domElement.appendChild(element);
   }
   
-  with(this) domElement.addEventListener('click', function(/*Event*/ e) {
-    if(e.target !== domElement) {
-      emit('trigger', {buttonName: e.target.buttonName});
-      emit(e.target.buttonName);
+  with(this) document.addEventListener('keydown', function(/*Event*/ e) {
+    if(!e.altKey && !e.ctrlKey && !e.shiftKey && e.keyCode === 13 && e.target.classList.contains('button')) {
+      e.target.dispatchEvent(new MouseEvent('click'));
     }
   });
   
   with(this) document.addEventListener('keydown', function(/*Event*/ e) {
     var index = keyCodesToButtonIndices[e.keyCode];
     
-    if(children[index]) {
-      if(children[index].repeatable || !children[index].classList.contains('button_keypress')) {
-        children[index].classList.add('button_keypress');
-        emit('trigger', {buttonName: children[index].buttonName});
-        emit(children[index].buttonName);
-      }
-    }
-  });
-  
-  with(this) document.addEventListener('keyup', function(/*Event*/ e) {
-    var index = keyCodesToButtonIndices[e.keyCode];
-    
-    if(children[index]) {
-      children[index].classList.remove('button_keypress');
+    if(!e.altKey && !e.ctrlKey && !e.shiftKey && children[index]) {
+      children[index].dispatchEvent(new MouseEvent('click'));
     }
   });
 }
@@ -81,32 +73,26 @@ PanelUI.Sidebar.prototype.constructor = PanelUI.Sidebar;
 /**
  * Makes a panel. Includes draggability and close button
  * 
- * var panel = new PanelUI.Panel({id: 'css_id', heading: 'Your heading here', startOpen: true, closeButton: true});
+ * var panel = new PanelUI.Panel({id: 'css_id', heading: 'Your heading here', startOpen: true, closeButton: true, accessKey: 'a'});
  */
 PanelUI.Panel = function(/*Object*/ options) {
-  this.domElement = fE('div', {id: options.id, className: 'panel'}, [
+  this.domElement = fE('div', {id: options.id, className: 'panel', tabIndex: 0, accessKey: options.accessKey || ''}, [
     fE('div', {className: 'panel_heading', textContent: options.heading || 'Heading', title: 'Click and drag to move panel'}),
   ]);
   
+  this.domElement.title = (options.heading || 'Heading') + (options.accessKey ? '\n\nAccess Key: ' + options.accessKey.toUpperCase() : '');
+  
+  this.keyCuts = {};
+  
   if(options.closeButton != false) {
     this.domElement.appendChild(
-      this.closeButton = fE('i', {className: 'fa fa-close panel_close button', title: 'Close panel'})
+      this.closeButton = fE('i', {className: 'fa fa-close panel_close button', title: 'Close panel\n\nKey: Q'})
     );
+    
+    this.keyCuts[81] = this.closeButton; // Q is for quit
   }
   
   this.draggie = new Draggabilly(this.domElement, {handle: '.panel_heading'});
-  
-  this.open = function() {
-    document.body.appendChild(this.domElement);
-  }
-  
-  this.close = function() {
-    document.body.removeChild(this.domElement);
-  }
-  
-  this.isOpen = function() {
-    return this.domElement.parentElement === document.body;
-  }
   
   if(localStorage['dragger_' + this.domElement.id + '_top']) {
     this.domElement.style.top  = localStorage['dragger_' + this.domElement.id + '_top' ];
@@ -117,15 +103,15 @@ PanelUI.Panel = function(/*Object*/ options) {
     this.open();
   }
   
+  with(this) domElement.addEventListener('keydown', function(e) {
+    if(!e.altKey && !e.ctrlKey && !e.shiftKey && keyCuts[e.keyCode]) {
+      e.stopPropagation();
+      
+      keyCuts[e.keyCode].dispatchEvent(new MouseEvent('click'));
+    }
+  });
+  
   if(options.closeButton != false) {
-    with(this) domElement.addEventListener('mouseenter', function(/*Event*/ e) {
-      closeButton.style.visibility = 'visible';
-    });
-    
-    with(this) domElement.addEventListener('mouseleave', function(/*Event*/ e) {
-      closeButton.style.visibility = 'hidden';
-    });
-    
     with(this) closeButton.addEventListener('click', function(/*Event*/ e) {
       close();
     });
@@ -135,4 +121,16 @@ PanelUI.Panel = function(/*Object*/ options) {
     localStorage['dragger_' + domElement.id + '_top' ] = domElement.style.top ;
     localStorage['dragger_' + domElement.id + '_left'] = domElement.style.left;
   });
+}
+
+PanelUI.Panel.prototype.open = function() {
+  document.body.appendChild(this.domElement);
+}
+
+PanelUI.Panel.prototype.close = function() {
+  document.body.removeChild(this.domElement);
+}
+
+PanelUI.Panel.prototype.isOpen = function() {
+  return this.domElement.parentElement === document.body;
 }
