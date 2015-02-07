@@ -20,12 +20,23 @@ if(top !== self) {
 <script type="text/javascript" src="three.Densaugeo.js"></script>
 <script type="text/javascript" src="castleMap.js"></script>
 
+<!-- js-objectdetect vision testing -->
+<script src="objectdetect/compatibility.js"></script>
+<script src="objectdetect/smoother.js"></script>
+<script src="objectdetect/objectdetect.js"></script>
+<script src="objectdetect/objectdetect.frontalface.js"></script>
+
 <link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
 <link rel="stylesheet" href="panelui_light.css" id="light_colors">
 <link rel="stylesheet" href="panelui_dark.css" id="dark_colors">
 <link rel="stylesheet" href="panelui.css">
 
 <style type="text/css">
+body {
+  z-index: -2;
+  height: 0;
+}
+
 canvas {
   position: absolute;
   top:      0;
@@ -39,9 +50,14 @@ canvas {
 }
 
 #help,
-#shader {
+#shader,
+#eye {
   top: 12px;
   left: 60px;
+}
+
+#eye {
+  min-width: 200px;
 }
 
 .button.active_shader {
@@ -52,6 +68,11 @@ canvas {
 </head>
 
 <body>
+
+<video id="video" style="visibility: hidden; z-index: -10"></video>
+
+<div id="test_output"></div>
+
 <a title="Real Time Web Analytics" style="visibility:hidden" href="http://clicky.com/100755588"><img alt="Real Time Web Analytics" src="//static.getclicky.com/media/links/badge.gif" border="0" /></a>
 <script type="text/javascript">
 var clicky_site_ids = clicky_site_ids || [];
@@ -183,7 +204,7 @@ var shaderChanger = new function() {
 }
 shaderChanger.__proto__ = Object.create(EventEmitter.prototype);
 
-sidebar.addButton({buttonName: 'shader', faClass: 'fa-eye', title: 'Change shader'});
+sidebar.addButton({buttonName: 'shader', faClass: 'fa-step-forward', title: 'Change shader'});
 sidebar.on('shader', function(e) {
   //changeMaterials(scene);
   shaderChanger.nextMaterial(scene);
@@ -371,6 +392,95 @@ sidebar.addButton({buttonName: 'shader_settings', faClass: 'fa-cog', title: 'Adj
 sidebar.on('shader_settings', function(e) {
   shaderPanel.isOpen() ? shaderPanel.close() : shaderPanel.open();
   shaderPanel.domElement.focus();
+});
+
+var eyePanel = new PanelUI.Panel({id: 'eye', heading: 'Eye Tracking', startOpen: false, accessKey: 'e'});
+eyePanel.needsCalibration = true;
+eyePanel.calibration = {x: 0, y: 0};
+eyePanel.domElement.appendChild(fE('div', {}, [
+  eyePanel.onButton        = fE('i', {className: 'fa fa-power-off button', title: 'O - Turn eye tracking on', tabIndex: 0}),
+  eyePanel.calibrateButton = fE('i', {className: 'fa fa-circle-thin button', title: 'C - Set eye base point', tabIndex: 0}),
+  fE('br'),
+  fE('text', {textContent: 'Test output:'}),
+  fE('br'),
+  eyePanel.testOutput = fE('text'),
+  fE('div', {}, [
+    fE('text', {textContent: 'Sensitivity:'}),
+    eyePanel.sensitivity = fE('input', {type: 'range', min: 0, max: 100, step: 1, defaultValue: 25}),
+  ]),
+]));
+
+eyePanel.keyCuts[67] = eyePanel.calibrateButton; // C
+eyePanel.keyCuts[79] = eyePanel.onButton; // O
+
+eyePanel.onButton.addEventListener('click', function(e) {
+  var smoother = new Smoother([0.9999999, 0.9999999, 0.999, 0.999], [0, 0, 0, 0]),
+  video = document.getElementById('video'),
+  glasses = document.getElementById('glasses'),
+  detector;
+  
+  try {
+    compatibility.getUserMedia({video: true}, function(stream) {
+      try {
+        video.src = compatibility.URL.createObjectURL(stream);
+      } catch (error) {
+        video.src = stream;
+      }
+      compatibility.requestAnimationFrame(play);
+    }, function (error) {
+      alert('WebRTC not available');
+    });
+  } catch (error) {
+    alert(error);
+  }
+  
+  function play() {
+    compatibility.requestAnimationFrame(play);
+    if (video.paused) video.play();
+    
+    if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
+      
+      // Prepare the detector once the video dimensions are known:
+      if (!detector) {
+        var width = ~~(60 * video.videoWidth / video.videoHeight);
+        var height  =60;
+        detector = new objectdetect.detector(width, height, 1.1, objectdetect.frontalface);
+      }
+      
+      // Perform the actual detection:
+      var coords = detector.detect(video, 1);
+      if (coords[0]) {
+        var coord = coords[0];
+        
+        coord = smoother.smooth(coord);
+        
+        if(eyePanel.needsCalibration) {
+          eyePanel.needsCalibration = false;
+          eyePanel.calibration.x = coord[0];
+          eyePanel.calibration.y = coord[1];
+        }
+        
+        if(eyePanel.isOpen()) {
+          eyePanel.testOutput.textContent = 'x: ' + Math.round(100*(coord[0] - eyePanel.calibration.x))/100 + ', y: ' + Math.round(100*(coord[1] - eyePanel.calibration.y))/100;
+        }
+        
+        controls.additionalRotationGlobalZ = -coord[0]*eyePanel.sensitivity.value/2500;
+        controls.additionalRotationX = coord[1]*eyePanel.sensitivity.value/2500;
+      }
+    }
+  }
+  
+
+});
+
+eyePanel.calibrateButton.addEventListener('click', function(e) {
+  eyePanel.needsCalibration = true;
+});
+
+sidebar.addButton({buttonName: 'eye', faClass: 'fa-eye', title: 'Eye tracking'});
+sidebar.on('eye', function(e) {
+  eyePanel.isOpen() ? eyePanel.close() : eyePanel.open();
+  eyePanel.domElement.focus();
 });
 
 /////////////////
