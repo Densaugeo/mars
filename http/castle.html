@@ -395,82 +395,124 @@ sidebar.on('shader_settings', function(e) {
 });
 
 var eyePanel = new PanelUI.Panel({id: 'eye', heading: 'Eye Tracking', startOpen: false, accessKey: 'e'});
-eyePanel.needsCalibration = true;
-eyePanel.calibration = {x: 0, y: 0};
+
+eyePanel.videoElement = document.getElementById('video');
+//eyePanel.detector = {};
+eyePanel.estimate = {x: 0, y: 0};
+eyePanel.tracking = false;
+eyePanel.faceWidthAtHalfMeter = 25;
+eyePanel.camWidth = 60;
+eyePanel.camHeight = 60;
+eyePanel.horizontalAngle = 70/180*Math.PI;
+eyePanel.verticalAngle = 43/180*Math.PI;
+eyePanel.cameraPosition = new THREE.Vector3(0, 0.175, -0.5);
+eyePanel.cameraRotation = new THREE.Euler(1/8*Math.PI, 0, 0);
+eyePanel.cameraMatrix = new THREE.Matrix4().compose(eyePanel.cameraPosition, new THREE.Quaternion().setFromEuler(eyePanel.cameraRotation), new THREE.Vector3(1, 1, 1));
+
+eyePanel.updateEstimate = function(data) {
+  var delta = {}, alpha = {};
+  
+  delta.x = Math.abs(data.x - this.estimate.x);
+  delta.y = Math.abs(data.y - this.estimate.y);
+  
+  alpha.x = 0.1 + 0.8*Math.min(Math.max((delta.x/10), 0), 1);
+  alpha.y = 0.1 + 0.8*Math.min(Math.max((delta.y/10), 0), 1);
+  
+  this.estimate.x += alpha.x*(data.x - this.estimate.x);
+  this.estimate.y += alpha.y*(data.y - this.estimate.y);
+}
+
+// Converts camera coordinates into 3D position relative to camera
+eyePanel.positionFromCoords = function(xAngle, yAngle, width) {
+  var result = new THREE.Vector3();
+  var distance = eyePanel.faceWidthAtHalfMeter/width*0.5;
+  
+  with(Math) {
+    result.z = distance/sqrt(pow(tan(xAngle), 2) + pow(tan(yAngle), 2) + 1);
+    result.x = -result.z*tan(xAngle);
+    result.y = -result.z*tan(yAngle);
+  }
+  
+  return result;
+}
+
+eyePanel.play = function() {
+  if(!eyePanel.tracking) {
+    return;
+  }
+  
+  if (eyePanel.videoElement.readyState === eyePanel.videoElement.HAVE_ENOUGH_DATA && eyePanel.videoElement.videoWidth > 0) {
+    // Prepare the detector once the video dimensions are known:
+    if (!eyePanel.detector) {
+      eyePanel.camWidth = ~~(60 * eyePanel.videoElement.videoWidth / eyePanel.videoElement.videoHeight);
+      eyePanel.detector = new objectdetect.detector(eyePanel.camWidth, eyePanel.camHeight, 1.1, objectdetect.frontalface);
+    }
+    
+    // Perform the actual detection:
+    var coords = eyePanel.detector.detect(video, 1);
+    if (coords[0]) {
+      var coord = coords[0];
+      
+      // Coord appears to have the form [left, top, width, height, some integer]
+      eyePanel.updateEstimate({x: coord[0] + coord[2]/2, y: coord[1] + coord[3]/2});
+      
+      var xAngle = (eyePanel.estimate.x - eyePanel.camWidth/2)/eyePanel.camWidth*eyePanel.horizontalAngle;
+      var yAngle = (eyePanel.estimate.y - eyePanel.camHeight/2)/eyePanel.camHeight*eyePanel.verticalAngle;
+      
+      var eyePosition = eyePanel.positionFromCoords(xAngle, yAngle, coord[2]);
+      eyePosition.add(eyePanel.cameraPosition).multiplyScalar(10);
+      
+      camera.matrix.makeRotationFromEuler(new THREE.Euler(0.2*yAngle, -0.2*xAngle, 0, 'XYZ'));
+      camera.matrix.setPosition(eyePosition);
+    }
+  }
+  
+  requestAnimationFrame(eyePanel.play);
+}
+
 eyePanel.domElement.appendChild(fE('div', {}, [
-  eyePanel.onButton        = fE('i', {className: 'fa fa-power-off button', title: 'O - Turn eye tracking on', tabIndex: 0}),
+  eyePanel.powerButton     = fE('i', {className: 'fa fa-power-off button', title: 'O - Turn eye tracking on/off', tabIndex: 0}),
   eyePanel.calibrateButton = fE('i', {className: 'fa fa-circle-thin button', title: 'C - Set eye base point', tabIndex: 0}),
-  fE('br'),
-  fE('text', {textContent: 'Test output:'}),
-  fE('br'),
-  eyePanel.testOutput = fE('text'),
   fE('div', {}, [
-    fE('text', {textContent: 'Sensitivity:'}),
-    eyePanel.sensitivity = fE('input', {type: 'range', min: 0, max: 100, step: 1, defaultValue: 25}),
+    fE('text', {textContent: 'Camera positition (cm):'}),
+    eyePanel.camPosition = fE('input', {type: 'text'}),
+  ]),
+  fE('div', {}, [
+    fE('text', {textContent: 'Camera rotation (rad, Euler XYZ):'}),
+    eyePanel.camRotation = fE('input', {type: 'text'}),
+  ]),
+  fE('div', {}, [
+    fE('text', {textContent: 'Test data:'}),
+    eyePanel.testData = fE('text'),
   ]),
 ]));
 
 eyePanel.keyCuts[67] = eyePanel.calibrateButton; // C
-eyePanel.keyCuts[79] = eyePanel.onButton; // O
+eyePanel.keyCuts[79] = eyePanel.powerButton; // O
 
-eyePanel.onButton.addEventListener('click', function(e) {
-  var smoother = new Smoother([0.9999999, 0.9999999, 0.999, 0.999], [0, 0, 0, 0]),
-  video = document.getElementById('video'),
-  glasses = document.getElementById('glasses'),
-  detector;
+eyePanel.powerButton.addEventListener('click', function(e) {
+  eyePanel.tracking = !eyePanel.tracking;
   
-  try {
+  if(eyePanel.videoElement.src === "") {
     compatibility.getUserMedia({video: true}, function(stream) {
       try {
-        video.src = compatibility.URL.createObjectURL(stream);
-      } catch (error) {
-        video.src = stream;
+        eyePanel.videoElement.src = compatibility.URL.createObjectURL(stream);
       }
-      compatibility.requestAnimationFrame(play);
-    }, function (error) {
+      catch(error) {
+        eyePanel.videoElement.src = stream;
+      }
+    }, function(error) {
       alert('WebRTC not available');
     });
-  } catch (error) {
-    alert(error);
   }
   
-  function play() {
-    compatibility.requestAnimationFrame(play);
-    if (video.paused) video.play();
-    
-    if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
-      
-      // Prepare the detector once the video dimensions are known:
-      if (!detector) {
-        var width = ~~(60 * video.videoWidth / video.videoHeight);
-        var height  =60;
-        detector = new objectdetect.detector(width, height, 1.1, objectdetect.frontalface);
-      }
-      
-      // Perform the actual detection:
-      var coords = detector.detect(video, 1);
-      if (coords[0]) {
-        var coord = coords[0];
-        
-        coord = smoother.smooth(coord);
-        
-        if(eyePanel.needsCalibration) {
-          eyePanel.needsCalibration = false;
-          eyePanel.calibration.x = coord[0];
-          eyePanel.calibration.y = coord[1];
-        }
-        
-        if(eyePanel.isOpen()) {
-          eyePanel.testOutput.textContent = 'x: ' + Math.round(100*(coord[0] - eyePanel.calibration.x))/100 + ', y: ' + Math.round(100*(coord[1] - eyePanel.calibration.y))/100;
-        }
-        
-        controls.additionalRotationGlobalZ = -coord[0]*eyePanel.sensitivity.value/2500;
-        controls.additionalRotationX = coord[1]*eyePanel.sensitivity.value/2500;
-      }
-    }
+  if(eyePanel.tracking) {
+    eyePanel.videoElement.play();
+    requestAnimationFrame(eyePanel.play);
   }
-  
-
+  else {
+    eyePanel.videoElement.pause();
+  }
 });
 
 eyePanel.calibrateButton.addEventListener('click', function(e) {
@@ -490,14 +532,18 @@ sidebar.on('eye', function(e) {
 var scene = new THREE.Scene();
 
 var camera = new THREE.PerspectiveCamera(45, (window.innerWidth - 48)/window.innerHeight, 1, 1000);
-camera.matrix.set(
+camera.matrixAutoUpdate = false;
+
+var cameraHolder = new THREE.Object3D();
+cameraHolder.matrix.set(
   0.8583453893661499, -0.2562495470046997, 0.4444985091686249, 28.422760009765625,
   0.5130719542503357, 0.4286935329437256, -0.7436251044273376, -49.2386474609375,
   0, 0.8663473129272461, 0.49944186210632324, 27.35080909729004,
   0, 0, 0, 1
 );
 
-scene.add(camera);
+cameraHolder.add(camera);
+scene.add(cameraHolder);
 
 var ambientLight = new THREE.AmbientLight(0x7F7F7F);
 scene.add(ambientLight);
@@ -514,7 +560,7 @@ renderer.setClearColor(0xC0C0C0, 1);
 
 document.body.appendChild(renderer.domElement);
 
-var controls = new THREE.Densaugeo.FreeControls(camera, renderer.domElement, {panMouseSpeed: 0.05, dollySpeed: 5});
+var controls = new THREE.Densaugeo.FreeControls(cameraHolder, renderer.domElement, {panMouseSpeed: 0.05, dollySpeed: 5});
 
 // WebGL occupies entire browser window
 window.addEventListener("resize", function() {
