@@ -416,24 +416,6 @@ THREE.Densaugeo.FreeControls = function(camera, domElement, options) {
     }
   });
   
-  var additionalRotationX = 0;
-  Object.defineProperty(this, 'additionalRotationX', {
-    get: function() {return additionalRotationX;},
-    set: function(value) {
-      rotateX += value - additionalRotationX;
-      additionalRotationX = value;
-    },
-  });
-  
-  var additionalRotationGlobalZ = 0;
-  Object.defineProperty(this, 'additionalRotationGlobalZ', {
-    get: function() {return additionalRotationGlobalZ;},
-    set: function(value) {
-      rotateGlobalZ += value - additionalRotationGlobalZ;
-      additionalRotationGlobalZ = value;
-    },
-  });
-  
   var touchZeroPrevious;
   var touchOnePrevious;
   var throttleZero, touchThrottle = 0;
