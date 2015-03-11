@@ -6,20 +6,6 @@
 
 <title>A Castle in the Cloud</title>
 
-<script type="text/javascript">
-// Frame buster
-if(top !== self) {
-  top.location.replace(self.location.href);
-}
-</script>
-
-<script type="text/javascript" src="draggabilly.pkgd.min.js"></script>
-<script type="text/javascript" src="EventEmitter.min.js"></script>
-<script type="text/javascript" src="panelui.js"></script>
-<script type="text/javascript" src="three.min.js"></script>
-<script type="text/javascript" src="three.Densaugeo.js"></script>
-<script type="text/javascript" src="castleMap.js"></script>
-
 <link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
 <link rel="stylesheet" href="panelui_light.css" id="light_colors">
 <link rel="stylesheet" href="panelui_dark.css" id="dark_colors">
@@ -47,8 +33,24 @@ canvas {
 .button.active_shader {
   color: #00F;
 }
-
 </style>
+
+<script type="text/javascript">
+// Frame buster
+if(top !== self) {
+  top.location.replace(self.location.href);
+}
+</script>
+
+<script type="text/javascript" src="draggabilly.pkgd.min.js"></script>
+<script type="text/javascript" src="EventEmitter.min.js"></script>
+<script type="text/javascript" src="panelui.js"></script>
+
+<script type="text/javascript" src="three.min.js"></script>
+<script type="text/javascript" src="three.Densaugeo.js"></script>
+<script type="text/javascript" src="castle/castleMap.js"></script>
+
+<script type="text/javascript" src="castle/CastleModules.js"></script>
 </head>
 
 <body>
@@ -75,119 +77,17 @@ clicky_site_ids.push(100755588);
 ////////
 
 var sidebar = new PanelUI.Sidebar();
-
 sidebar.addButton({buttonName: 'land', faClass: 'fa-university', title: 'Landing page'});
-sidebar.on('land', function(e) {
-  document.location.href = document.location.origin + '/index.html';
-});
-
-var helpPanel = new PanelUI.Panel({id: 'help', heading: 'Controls', startOpen: false, accessKey: 'c'});
-helpPanel.domElement.appendChild(fE('div', {}, [
-  fE('text', {textContent: 'Touchscreen:'}),
-  fE('br'),
-  fE('text', {textContent: 'First finger drag - Pan'}),
-  fE('br'),
-  fE('text', {textContent: 'Second finger drag - Rotate'}),
-  fE('br'),
-  fE('text', {textContent: 'Slide along right edge - Throttle'}),
-  fE('br'),
-  fE('br'),
-  fE('text', {textContent: 'Mouse:'}),
-  fE('br'),
-  fE('text', {textContent: 'Left click and drag - Pan'}),
-  fE('br'),
-  fE('text', {textContent: 'Right click and drag - Rotate'}),
-  fE('br'),
-  fE('text', {textContent: 'Scroll wheel - Dolly'}),
-  fE('br'),
-  fE('text', {textContent: 'Shift click - Activate mouse look'}),
-  fE('br'),
-  fE('text', {textContent: 'Esc - Exit mouse look'}),
-  fE('br'),
-  fE('br'),
-  fE('text', {textContent: 'Keyboard:'}),
-  fE('br'),
-  fE('text', {textContent: 'W/S - Fly forward/backward'}),
-  fE('br'),
-  fE('text', {textContent: 'A/D - Strafe left/right'}),
-  fE('br'),
-  fE('text', {textContent: 'E/C - Ascend/Descend'}),
-  fE('br'),
-  fE('text', {textContent: 'Arrows - Turn'}),
-  fE('br'),
-  fE('br'),
-  fE('text', {textContent: 'Gamepad (press any face button to activate):'}),
-  fE('br'),
-  fE('text', {textContent: 'Left stick - Pan'}),
-  fE('br'),
-  fE('text', {textContent: 'Right stick - Turn'}),
-  fE('br'),
-  fE('text', {textContent: 'Left/right trigger - Throttle back/forward'}),
-]));
-
 sidebar.addButton({buttonName: 'help', faClass: 'fa-question', title: 'Help'});
-sidebar.on('help', function(e) {
-  helpPanel.isOpen() ? helpPanel.close() : helpPanel.open();
-});
-
-var shaderChanger = new function() {
-  EventEmitter.call(this);
-  
-  this.shaders = {
-    original: 'original',
-    global: new THREE.Densaugeo.CoordinateMaterial({transparent: true}),
-    local: new THREE.Densaugeo.CoordinateMaterial({transparent: true, side: THREE.DoubleSide, local: true, showAxes: new THREE.Vector3(0, 0, 0)}),
-    ghost: new THREE.Densaugeo.PositionMaterial({transparent: true, alpha: 0.8}),
-    normals: new THREE.Densaugeo.NormalMaterial({transparent: true}),
-    psychedelic: new THREE.Densaugeo.PsychMaterial({transparent: true}),
-  }
-  
-  this.shaderSequence = ['original', 'global', 'local', 'ghost', 'normals', 'psychedelic'];
-  this.currentShader = 'original';
-  
-  var changeMaterial = function(object, material) {
-    if(object instanceof THREE.Mesh) {
-      if(object.originalMaterial == null) {
-        object.originalMaterial = object.material;
-      }
-      
-      object.material = material === 'original' ? object.originalMaterial : material;
-    }
-    
-    if(object instanceof THREE.Object3D) {
-      for(var i = 0, endi = object.children.length; i < endi; ++i) {
-        changeMaterial(object.children[i], material);
-      }
-    }
-  }
-  
-  with(this) this.nextMaterial = function(object) {
-    var previousShader = currentShader;
-    
-    currentShader = shaderSequence[(shaderSequence.indexOf(currentShader) + 1) % shaderSequence.length];
-    
-    changeMaterial(object, shaders[currentShader]);
-    
-    emit('change', {currentShader: currentShader, previousShader: previousShader});
-  }
-  
-  with(this) this.setMaterial = function(object, /*string*/ shaderName) {
-    var previousShader = currentShader;
-    
-    currentShader = shaderName;
-    
-    changeMaterial(object, shaders[currentShader]);
-    
-    emit('change', {currentShader: currentShader, previousShader: previousShader});
-  }
-}
-shaderChanger.__proto__ = Object.create(EventEmitter.prototype);
-
 sidebar.addButton({buttonName: 'shader', faClass: 'fa-eye', title: 'Change shader'});
-sidebar.on('shader', function(e) {
-  //changeMaterials(scene);
-  shaderChanger.nextMaterial(scene);
-});
+sidebar.addButton({buttonName: 'fs', faClass: 'fa-arrows-alt', title: 'Fullscreen'});
+sidebar.addButton({buttonName: 'contrast', faClass: 'fa-adjust', title: 'Flip Contrast'});
+sidebar.addButton({buttonName: 'clear', faClass: 'fa-recycle', title: 'Clear local storage'});
+sidebar.addButton({buttonName: 'shader_settings', faClass: 'fa-cog', title: 'Adjust shader settings'});
+
+var helpPanel = new CastleModules.HelpPanel();
+var shaderChanger = new CastleModules.ShaderChanger();
+var shaderPanel = new CastleModules.ShaderPanel();
 
 if(HTMLElement.prototype.requestFullscreen == null) {
   HTMLElement.prototype.requestFullscreen = HTMLElement.prototype.msRequestFullscreen || HTMLElement.prototype.mozRequestFullScreen || HTMLElement.prototype.webkitRequestFullscreen;
@@ -199,15 +99,6 @@ var getFullscreenElement = function() {
   return document.fullscreenElement || document.msFullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement;
 }
 
-sidebar.addButton({buttonName: 'fs', faClass: 'fa-arrows-alt', title: 'Fullscreen'});
-sidebar.on('fs', function(e) {
-  if(getFullscreenElement() == null) {
-    document.body.requestFullscreen();
-  } else {
-    document.exitFullscreen();
-  }
-});
-
 var darkColors = document.getElementById('dark_colors');
 var head = darkColors.parentNode;
 var contrastFlipped = false;
@@ -216,7 +107,27 @@ if(localStorage.contrast === 'light') {
   head.removeChild(darkColors);
 }
 
-sidebar.addButton({buttonName: 'contrast', faClass: 'fa-adjust', title: 'Flip Contrast'});
+sidebar.on('land', function(e) {
+  document.location.href = document.location.origin + '/index.html';
+});
+
+sidebar.on('help', function(e) {
+  helpPanel.isOpen() ? helpPanel.close() : helpPanel.open();
+});
+
+sidebar.on('shader', function(e) {
+  //changeMaterials(scene);
+  shaderChanger.nextMaterial(scene);
+});
+
+sidebar.on('fs', function(e) {
+  if(getFullscreenElement() == null) {
+    document.body.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+});
+
 sidebar.on('contrast', function(e) {
   if(contrastFlipped = !contrastFlipped) {
     head.removeChild(darkColors);
@@ -227,150 +138,26 @@ sidebar.on('contrast', function(e) {
   }
 });
 
-sidebar.addButton({buttonName: 'clear', faClass: 'fa-recycle', title: 'Clear local storage'});
 sidebar.on('clear', function(e) {
   localStorage.clear();
 });
 
-var shaderPanel = new PanelUI.Panel({id: 'shader', heading: 'Shader Settings', accessKey: 's'});
-
-shaderPanel.shaderButtons = {};
-shaderPanel.controls = {};
-
-shaderPanel.content = fE('div', {}, [
-  fE('br'),
-  fE('text', {textContent: 'Current shader:'}),
-  fE('br'),
-  shaderPanel.shaderButtons.original    = fE('b', {className: 'button active_shader', title: 'Phong', textContent: 'P', tabIndex: 0}),
-  shaderPanel.shaderButtons.global      = fE('b', {className: 'button', title: 'Global coordinate grid', textContent: 'G', tabIndex: 0}),
-  shaderPanel.shaderButtons.local       = fE('b', {className: 'button', title: 'Local coordinate grid', textContent: 'L', tabIndex: 0}),
-  shaderPanel.shaderButtons.ghost       = fE('b', {className: 'button', title: 'Ghostly', textContent: 'H', tabIndex: 0}),
-  shaderPanel.shaderButtons.normals     = fE('b', {className: 'button', title: 'RGB-encoded normals', textContent: 'N', tabIndex: 0}),
-  shaderPanel.shaderButtons.psychedelic = fE('b', {className: 'button', title: 'Psychedelic', textContent: 'S', tabIndex: 0}),
-  fE('div', {}, [
-    fE('text', {textContent: 'Alpha:'}),
-    shaderPanel.controls.alpha = fE('input', {type: 'range', min: 0, max: 1, step: 0.01}),
-  ]),
-  fE('div', {}, [
-    fE('text', {textContent: 'Local:'}),
-    shaderPanel.controls.local = fE('input', {type: 'range', min: 0, max: 1, step: 1}),
-  ]),
-  fE('div', {}, [
-    fE('text', {textContent: 'Sun direction:'}),
-    shaderPanel.controls.sunDirection = fE('input', {type: 'text'}),
-  ]),
-  fE('div', {}, [
-    fE('text', {textContent: 'Ambient color:'}),
-    shaderPanel.controls.ambient = fE('input', {type: 'text'}),
-  ]),
-  fE('div', {}, [
-    fE('text', {textContent: 'Diffuse color:'}),
-    shaderPanel.controls.diffuse = fE('input', {type: 'text'}),
-  ]),
-  fE('div', {}, [
-    fE('text', {textContent: 'Specular color:'}),
-    shaderPanel.controls.specular = fE('input', {type: 'text'}),
-  ]),
-  fE('div', {}, [
-    fE('text', {textContent: 'Show axes:'}),
-    shaderPanel.controls.showAxes = fE('input', {type: 'text'}),
-  ]),
-  fE('div', {}, [
-    fE('text', {textContent: 'Axis weight:'}),
-    shaderPanel.controls.axisWeight = fE('input', {type: 'text'}),
-  ]),
-  fE('div', {}, [
-    fE('text', {textContent: 'Show grid:'}),
-    shaderPanel.controls.showGrid = fE('input', {type: 'text'}),
-  ]),
-  fE('div', {}, [
-    fE('text', {textContent: 'Grid weight:'}),
-    shaderPanel.controls.gridWeight = fE('input', {type: 'text'}),
-  ]),
-  fE('div', {}, [
-    fE('text', {textContent: 'Grid spacing:'}),
-    shaderPanel.controls.gridSpacing = fE('input', {type: 'text'}),
-  ]),
-  fE('div', {}, [
-    fE('text', {textContent: 'Fade distance:'}),
-    shaderPanel.controls.fadeDistance = fE('input', {type: 'text'}),
-  ]),
-  fE('div', {}, [
-    fE('text', {textContent: 'Mode:'}),
-    shaderPanel.controls.mode = fE('input', {type: 'range', min: 0, max: 1, step: 1}),
-  ]),
-  fE('div', {}, [
-    fE('text', {textContent: 'Wavelength:'}),
-    shaderPanel.controls.wavelength = fE('input', {type: 'text'}),
-  ]),
-  fE('div', {}, [
-    fE('text', {textContent: 'Frequency:'}),
-    shaderPanel.controls.frequency = fE('input', {type: 'text'}),
-  ]),
-]);
-shaderPanel.domElement.appendChild(shaderPanel.content);
-
-shaderPanel.keyCuts[80] = shaderPanel.shaderButtons.original;
-shaderPanel.keyCuts[71] = shaderPanel.shaderButtons.global;
-shaderPanel.keyCuts[76] = shaderPanel.shaderButtons.local;
-shaderPanel.keyCuts[72] = shaderPanel.shaderButtons.ghost;
-shaderPanel.keyCuts[78] = shaderPanel.shaderButtons.normals;
-shaderPanel.keyCuts[83] = shaderPanel.shaderButtons.psychedelic;
-
-for(var i in shaderPanel.shaderButtons) {
-  with({i: i}) shaderPanel.shaderButtons[i].addEventListener('click', function(e) {
-    shaderChanger.setMaterial(scene, i);
-  });
-}
-
-for(var i in shaderPanel.controls) {
-  switch(shaderPanel.controls[i].type) {
-    case 'range':
-      with({i: i}) shaderPanel.controls[i].addEventListener('input', function(e) {
-        water.material[i] = shaderPanel.controls[i].value;
-        water.material.updateUniforms();
-      });
-      break;
-    case 'text':
-      with({i: i}) shaderPanel.controls[i].addEventListener('change', function(e) {
-        water.material[i].fromString(shaderPanel.controls[i].value);
-        water.material.updateUniforms();
-      });
-      
-      shaderPanel.controls[i].addEventListener('keydown', function(e) {
-        e.stopPropagation();
-      });
-      break;
-  }
-}
-
-shaderPanel.update = function(e) {
-  if(e && shaderPanel.shaderButtons[e.previousShader]) {
-    shaderPanel.shaderButtons[e.previousShader].classList.remove('active_shader');
-  }
-  
-  if(e && shaderPanel.shaderButtons[e.currentShader]) {
-    shaderPanel.shaderButtons[e.currentShader].classList.add('active_shader');
-  }
-  
-  for(var i in shaderPanel.controls) {
-    if(water.material[i] != null) {
-      shaderPanel.controls[i].parentElement.style.display = '';
-      shaderPanel.controls[i].value = water.material[i].toString();
-    } else {
-      shaderPanel.controls[i].parentElement.style.display = 'none';
-    }
-  }
-}
-
-shaderChanger.on('change', shaderPanel.update);
-
-castleMap.on('loaded', shaderPanel.update);
-
-sidebar.addButton({buttonName: 'shader_settings', faClass: 'fa-cog', title: 'Adjust shader settings'});
 sidebar.on('shader_settings', function(e) {
   shaderPanel.isOpen() ? shaderPanel.close() : shaderPanel.open();
   shaderPanel.domElement.focus();
+});
+
+shaderChanger.on('change', function(e) {
+  e.materialRef = water.material;
+  shaderPanel.changeShader(e);
+});
+
+shaderPanel.on('set_material', function(e) {
+  shaderChanger.setMaterial(scene, e.materialName);
+});
+
+castleMap.on('loaded', function() {
+  shaderPanel.changeShader({materialRef: water.material});
 });
 
 /////////////////

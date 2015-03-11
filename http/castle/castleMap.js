@@ -1,11 +1,11 @@
 /**
- * Creates a THREE.Object3D castle
- * Dependencies: THREE.js, THREE.Densaugeo.js, EventEmitter.js, bunch of models
+ * @description Creates a THREE.Object3D castle
+ * @depends THREE.js
+ * @depends THREE.Densaugeo.js
+ * @depends EventEmitter.js
  * 
- * Usage:
- * 1 - Include this file
- * 2 - scene.add(castleMap.castle);
- * 3 - castleMap.load(callback);
+ * @example scene.add(castleMap.castle);
+ * @example castleMap.load(callback);
  */
 
 if(window.THREE == null) {
@@ -18,8 +18,10 @@ if(window.THREE.Densaugeo == null) {
 
 castleMap = new EventEmitter();
 
+// @prop THREE.Object3D castle -- Base object
 castleMap.castle = new THREE.Object3D();
 
+// @prop [String] modelPaths -- Paths to each THREE.js model
 castleMap.modelPaths = [
   "models/Annex_Door.json",
   "models/Annex_Gate.json",
@@ -90,6 +92,9 @@ var fM  = THREE.Densaugeo.forgeMesh;
 
 var loader = new THREE.Densaugeo.JSONMultiLoader();
 
+// @method undefined load() -- Loads all the models and fires events at start and finish
+// @event loading {} -- REquests for models have been sent to server
+// @event loaded {} -- Models have finished loading; scene is available in .castle
 castleMap.load = function() {
   loader.loadAll(castleMap.modelPaths, function(geometries, materialses) {
     var geometry, material;
