@@ -197,6 +197,52 @@ CastleModules.ShaderPanel = function ShaderPanel(options) {
 CastleModules.ShaderPanel.prototype = Object.create(PanelUI.Panel.prototype);
 CastleModules.ShaderPanel.prototype.constructor = CastleModules.ShaderPanel;
 
+/**
+ * @module CastleModules.ObjectPanel inherits PanelUI.Panel
+ * @description UI panel to interact with objects in a three.js scene
+ * 
+ * @example var objectPanel = new CastleModules.ObjectPanel();
+ * @example picker.on('select', objectPanel.selectHandler);
+ * @example objectPanel.on('close', picker.unselect);
+ */
+CastleModules.ObjectPanel = function ObjectPanel(options) {
+  PanelUI.Panel.call(this, {id: 'object', heading: 'None', accessKey: 'o'});
+  
+  // @prop HTMLElement content -- Div tag to hold panel-specific content
+  this.content = document.createElement('div');
+  this.domElement.appendChild(this.content);
+  
+  // @prop [HTMLElement] actions -- Holds div tags used to activae each action. May be attached or not
+  this.actions = [];
+  for(var i = 0, endi = 8; i < endi; ++i) {
+    this.actions[i] = fE('div');
+  }
+  
+  // @method undefined selectHandler({THREE.Densaugeo.IntObject target}) -- Links ObjectPanel to an interactive three.js object
+  with(this) this.selectHandler = function(e) {
+    domElement.children[0].textContent = e.target.name;
+    
+    clear();
+    
+    Object.keys(e.target.controls).forEach(function(v, i, a) {
+      actions[i].textContent = v;
+      actions[i].onclick = e.target.controls[v];
+      content.appendChild(actions[i]);
+    });
+    
+    open();
+  }
+}
+CastleModules.ObjectPanel.prototype = Object.create(PanelUI.Panel.prototype);
+CastleModules.ObjectPanel.prototype.constructor = CastleModules.ObjectPanel;
+
+// @method proto undefined clear() -- Clears .content
+CastleModules.ObjectPanel.prototype.clear = function() {
+  while(this.content.children.length > 0) {
+    this.content.removeChild(this.content.firstChild);
+  }
+}
+
 // @method proto undefined changeShader({THREE.ShaderMaterial materialRef}) -- Used to notify ShaderPanel that the shader has been changed
 CastleModules.ShaderPanel.prototype.changeShader = function(e) {
   this.currentShader = e.materialRef;

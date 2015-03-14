@@ -25,7 +25,9 @@ canvas {
 }
 
 #help,
-#shader {
+#shader,
+#object {
+  min-width: 200px;
   top: 12px;
   left: 60px;
 }
@@ -88,6 +90,8 @@ sidebar.addButton({buttonName: 'shader_settings', faClass: 'fa-cog', title: 'Adj
 var helpPanel = new CastleModules.HelpPanel();
 var shaderChanger = new CastleModules.ShaderChanger();
 var shaderPanel = new CastleModules.ShaderPanel();
+var objectPanel = new CastleModules.ObjectPanel();
+var picker = new THREE.Densaugeo.Picker();
 
 if(HTMLElement.prototype.requestFullscreen == null) {
   HTMLElement.prototype.requestFullscreen = HTMLElement.prototype.msRequestFullscreen || HTMLElement.prototype.mozRequestFullScreen || HTMLElement.prototype.webkitRequestFullscreen;
@@ -160,6 +164,13 @@ castleMap.on('loaded', function() {
   shaderPanel.changeShader({materialRef: water.material});
 });
 
+objectPanel.on('close', picker.unselect);
+
+picker.on('select', objectPanel.selectHandler);
+
+picker.intObjects.push(castleMap.mainGate);
+picker.intObjects.push(castleMap.harborGate);
+
 /////////////////
 // THREE setup //
 /////////////////
@@ -208,6 +219,8 @@ castleMap.load();
 
 //scene.add(f3D(THREE.Mesh, {geometry: new THREE.PlaneGeometry(128, 128, 1, 1), material: waterShader, position: [0, 0, -0.5]}));
 scene.add(water = f3D(THREE.Mesh, {geometry: new THREE.PlaneGeometry(128, 128, 1, 1), material: new THREE.Densaugeo.WaterMaterial({side: THREE.DoubleSide}), position: [0, 0, -0.5]}));
+
+renderer.domElement.addEventListener('click', picker.clickHandler);
 
 /////////////////////////
 // Tick initialization //
