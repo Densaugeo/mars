@@ -100,6 +100,8 @@ PanelUI.Sidebar.prototype.constructor = PanelUI.Sidebar;
 PanelUI.Panel = function Panel(options) {
   EventEmitter.call(this);
   
+  var self = this;
+  
   // @prop HTMLElement domElement -- div tag that holds all of the Panel's HTML elements
   this.domElement = fE('div', {id: options.id, className: 'panel', tabIndex: 0, accessKey: options.accessKey || ''}, [
     fE('div', {className: 'panel_heading', textContent: options.heading || 'Heading', title: 'Click and drag to move panel'}),
@@ -137,8 +139,8 @@ PanelUI.Panel = function Panel(options) {
   });
   
   if(options.closeButton != false) {
-    with(this) closeButton.addEventListener('click', function(/*Event*/ e) {
-      close();
+    this.closeButton.addEventListener('click', function(/*Event*/ e) {
+      self.close();
     });
   }
   
@@ -156,8 +158,11 @@ PanelUI.Panel.prototype.open = function() {
 }
 
 // @method proto undefined close() -- Removes Panel's domElement from the document
+// @event close {} -- Fired on panel close
 PanelUI.Panel.prototype.close = function() {
-  document.body.removeChild(this.domElement);
+  this.domElement.parentElement.removeChild(this.domElement);
+  
+  this.emit('close');
 }
 
 // @method proto Boolean isOpen() -- Returns whether panel is currently open (attached to document)
