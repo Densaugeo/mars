@@ -109,7 +109,7 @@ PanelUI.Panel = function Panel(options) {
   
   this.domElement.title = (options.heading || 'Heading') + (options.accessKey ? '\n\nAccess Key: ' + options.accessKey.toUpperCase() : '');
   
-  // @prop Object keyCuts -- Key-value store of keyboard shortcuts. Keys are .charCode numbers, values are HTMLElement references
+  // @prop Object keyCuts -- Key-value store of keyboard shortcuts. Keys are .keyCode numbers, values are HTMLElement references
   this.keyCuts = {};
   
   // @prop HTMLElement closeButton -- Reference to the close button (may not exist, depending on options)
