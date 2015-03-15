@@ -74,7 +74,7 @@ panel.open();
 
 `Draggabilly` **draggie** -- Attachment of Draggabilly library for drag-and-drop positioning
 
-`Object` **keyCuts** -- Key-value store of keyboard shortcuts. Keys are .charCode numbers, values are HTMLElement references
+`Object` **keyCuts** -- Key-value store of keyboard shortcuts. Keys are .keyCode numbers, values are HTMLElement references
 
 #### Methods
 

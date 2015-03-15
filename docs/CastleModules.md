@@ -52,6 +52,32 @@ shaderPanel.open();
 
 ---
 
+## CastleModules.ObjectPanel
+
+Inherits: `PanelUI.Panel`
+
+UI panel to interact with objects in a three.js scene
+
+```
+var objectPanel = new CastleModules.ObjectPanel();
+picker.on('select', objectPanel.selectHandler);
+objectPanel.on('close', picker.unselect);
+```
+
+#### Properties
+
+`[HTMLElement]` **actions** -- Holds div tags used to activate each action. May be attached or not
+
+`HTMLElement` **content** -- Div tag to hold panel-specific content
+
+#### Methods
+
+`undefined` proto **clear**`()` -- Clears .content
+
+`undefined` **selectHandler**`({THREE.Densaugeo.IntObject target})` -- Links ObjectPanel to an interactive three.js object
+
+---
+
 ## CastleModules.ShaderChanger
 
 Inherits: `EventEmitter`
