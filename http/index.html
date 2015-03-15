@@ -26,7 +26,7 @@ if(top !== self) {
 .panel {
   position: relative;
   top: 12px;
-  left: calc(50% - 156px);
+  left: calc(50% - 132px);
   width: 300px;
   margin-bottom: 12px;
 }
@@ -90,7 +90,7 @@ new ProjectPanel({
   heading: 'A Castle in the Cloud',
   date: '9 Jan 2015',
   text: 'WebGL demo built with THREE.js. Features touchscreen, accelerometer, and gamepad control.',
-});
+}).open();
 
 new ProjectPanel({
   id: 'SimpleGPS',
@@ -99,7 +99,7 @@ new ProjectPanel({
   heading: 'Simplified GPS and compass app for Firefox',
   date: '27 Sep 2014',
   text: 'SimpleGPS is a GPS and compass app for Firefox that shows current coordinates, heading, and target distance and heading.',
-});
+}).open();
 
 // Went live with madengineersworkshop.net on 15 Jul 2014 - Lunariel
 new ProjectPanel({
@@ -109,7 +109,7 @@ new ProjectPanel({
   heading: 'WebGL view of my model for the MakerBotMars competition',
   date: '15 July 2014',
   text: 'Hello, this <a href="http://www.thingiverse.com/thing:362133" target="_blank">Mars Base model</a> is the first entry for the Mad Engineer\'s Workshop. It\'s written with WebGL (and the three.js library), and is also my first attempt at making a 3D printing model. Nothing will actually be printed until I get a 3D printer though...',
-});
+}).open();
 
 var sidebar = new PanelUI.Sidebar();
 

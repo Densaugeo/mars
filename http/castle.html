@@ -221,7 +221,7 @@ castleMap.load();
 //scene.add(f3D(THREE.Mesh, {geometry: new THREE.PlaneGeometry(128, 128, 1, 1), material: waterShader, position: [0, 0, -0.5]}));
 scene.add(water = f3D(THREE.Mesh, {geometry: new THREE.PlaneGeometry(128, 128, 1, 1), material: new THREE.Densaugeo.WaterMaterial({side: THREE.DoubleSide}), position: [0, 0, -0.5]}));
 
-renderer.domElement.addEventListener('click', picker.clickHandler);
+picker.setRenderer(renderer);
 
 /////////////////////////
 // Tick initialization //
