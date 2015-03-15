@@ -162,14 +162,15 @@ shaderPanel.on('set_material', function(e) {
 
 castleMap.on('loaded', function() {
   shaderPanel.changeShader({materialRef: water.material});
+  
+  for(var i in castleMap.gates) {
+    picker.intObjects.push(castleMap.gates[i]);
+  }
 });
 
 objectPanel.on('close', picker.unselect);
 
 picker.on('select', objectPanel.selectHandler);
-
-picker.intObjects.push(castleMap.mainGate);
-picker.intObjects.push(castleMap.harborGate);
 
 /////////////////
 // THREE setup //
