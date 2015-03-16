@@ -56,7 +56,7 @@ if(top !== self) {
 </head>
 
 <body>
-<a title="Real Time Web Analytics" style="visibility:hidden" href="http://clicky.com/100755588"><img alt="Real Time Web Analytics" src="//static.getclicky.com/media/links/badge.gif" border="0" /></a>
+<a title="Real Time Web Analytics" style="display:none" href="http://clicky.com/100755588"><img alt="Real Time Web Analytics" src="//static.getclicky.com/media/links/badge.gif" border="0" /></a>
 <script type="text/javascript">
 var clicky_site_ids = clicky_site_ids || [];
 clicky_site_ids.push(100755588);
@@ -116,7 +116,12 @@ sidebar.on('land', function(e) {
 });
 
 sidebar.on('help', function(e) {
-  helpPanel.isOpen() ? helpPanel.close() : helpPanel.open();
+  if(helpPanel.isOpen()) {
+    helpPanel.close();
+  } else {
+    helpPanel.open();
+    helpPanel.domElement.focus();
+  }
 });
 
 sidebar.on('shader', function(e) {
