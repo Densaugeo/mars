@@ -42,7 +42,7 @@ if(top !== self) {
 <body>
 <div id="background"></div>
 
-<a title="Real Time Web Analytics" style="visibility:hidden" href="http://clicky.com/100755588"><img alt="Real Time Web Analytics" src="//static.getclicky.com/media/links/badge.gif" border="0" /></a>
+<a title="Real Time Web Analytics" style="display:none" href="http://clicky.com/100755588"><img alt="Real Time Web Analytics" src="//static.getclicky.com/media/links/badge.gif" border="0" /></a>
 <script type="text/javascript">
 var clicky_site_ids = clicky_site_ids || [];
 clicky_site_ids.push(100755588);
@@ -82,6 +82,15 @@ var ProjectPanel = function(options) {
 }
 ProjectPanel.prototype = Object.create(PanelUI.Panel.prototype);
 ProjectPanel.prototype.constructor = ProjectPanel;
+
+new ProjectPanel({
+  id: 'waves',
+  href: 'waves.html',
+  image: 'waves_screen.png',
+  heading: 'Electron Clouds',
+  date: '24 Mar 2015',
+  text: 'Uses volume ray tracing to visualize some hydrogen orbitals',
+}).open();
 
 new ProjectPanel({
   id: 'castle',
