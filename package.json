@@ -1,12 +1,30 @@
 {
-  "name": "Template",
-  "description": "A template (surprise!)",
-  "author": "Densaugeo",
-  "dependencies": {
-    "express": "3.4.x",
-    "ws": "0.4.x",
-    "stdio": "0.1.x",
-    "iz": "0.4.x"
+  "name": "mars",
+  "version": "0.1.0",
+  "engines": {},
+  "description": "WebGL view of an entry for the MakerBot Mars contest",
+  "main": "mars.html",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Densaugeo/mars"
   },
-  "engine": "node 0.10.x"
+  "keywords": [],
+  "author": "Densaugeo",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {},
+  "files": [
+    "EventEmitter.min.js",
+    "LICENSE",
+    "mars.html",
+    "mars_base.js",
+    "mars_shed.js",
+    "mars_solar.js",
+    "mars_terrain.js",
+    "package.json",
+    "README.md",
+    "three.Densaugeo.js",
+    "three.min.js"
+  ]
 }
