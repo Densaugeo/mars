@@ -1,19 +1,13 @@
 {
   "name": "mars",
-  "version": "0.1.0",
-  "engines": {},
+  "version": "0.1.1",
   "description": "WebGL view of an entry for the MakerBot Mars contest",
-  "main": "mars.html",
-  "scripts": {},
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Densaugeo/mars"
-  },
   "keywords": [],
-  "author": "Densaugeo",
+  "homepage": "https://github.com/Densaugeo/mars",
+  "bugs": "https://github.com/Densaugeo/mars/issues",
   "license": "MIT",
-  "dependencies": {},
-  "devDependencies": {},
+  "author": "Densaugeo (http://madengineersworkshop.net/)",
+  "contributors": [],
   "files": [
     "EventEmitter.min.js",
     "LICENSE",
@@ -26,5 +20,15 @@
     "README.md",
     "three.Densaugeo.js",
     "three.min.js"
-  ]
+  ],
+  "main": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Densaugeo/mars.git"
+  },
+  "scripts": {},
+  "config": {},
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {}
 }
